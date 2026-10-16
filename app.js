@@ -5,6 +5,302 @@ const {
   useCallback,
   useMemo
 } = React;
+// ─── Sprachen: Deutsch, English, Français ───
+// Texte stehen im Code auf Deutsch; t() liefert die Übersetzung der gewählten Sprache.
+// Notennamen: deutsch (H, B, Fis, Es), englisch (B, B♭, F♯, E♭), französisch (Si, Si♭, Fa♯, Mi♭).
+
+const LANGS = {
+  de: "Deutsch",
+  en: "English",
+  fr: "Français"
+};
+const LANG_KEY = "tonleitern-lang";
+const LANG = (() => {
+  try {
+    const s = window.localStorage.getItem(LANG_KEY);
+    if (LANGS[s]) return s;
+  } catch {/* kein Speicher */}
+  const n = (navigator.language || "").slice(0, 2).toLowerCase();
+  return LANGS[n] ? n : "en";
+})();
+function setLang(l) {
+  try {
+    window.localStorage.setItem(LANG_KEY, l);
+  } catch {/* kein Speicher */}
+  window.location.reload();
+}
+
+// [English, Français]
+const TR = {
+  // Allgemein / Navigation
+  "Tonleitern & Drone": ["Scales & Drone", "Gammes & Bourdon"],
+  "Stimmgerät": ["Tuner", "Accordeur"],
+  "Metronom": ["Metronome", "Métronome"],
+  "Tonleitern": ["Scales", "Gammes"],
+  "Drone": ["Drone", "Bourdon"],
+  "Sprache": ["Language", "Langue"],
+  "Oktave": ["Octave", "Octave"],
+  "Lautstärke": ["Volume", "Volume"],
+  "■ Stopp": ["■ Stop", "■ Stop"],
+  // Stimmgerät
+  "Kammerton a¹": ["Concert pitch A4", "Diapason La"],
+  "zu tief": ["too low", "trop bas"],
+  "sauber": ["in tune", "juste"],
+  "zu hoch": ["too high", "trop haut"],
+  "Spiel einen Ton…": ["Play a note…", "Jouez une note…"],
+  "Mikrofon aus": ["Microphone off", "Micro éteint"],
+  "Stimmgerät aus": ["Tuner off", "Accordeur éteint"],
+  "🎤 Stimmgerät an": ["🎤 Tuner on", "🎤 Allumer l’accordeur"],
+  "■ Aufnahme beenden ({n} Töne)": ["■ Stop recording ({n} notes)", "■ Arrêter l’enregistrement ({n} notes)"],
+  "● Aufnahme mit Auswertung": ["● Record with analysis", "● Enregistrer avec analyse"],
+  "Sauber bis ±": ["In tune within ±", "Juste à ±"],
+  "Bisher: {ok} sauber · {low} zu tief · {high} zu hoch": ["So far: {ok} in tune · {low} too low · {high} too high", "Jusqu’ici : {ok} justes · {low} trop bas · {high} trop haut"],
+  "Auswertung": ["Analysis", "Analyse"],
+  "Keine gehaltenen Töne erkannt. Töne etwas länger halten und näher ans Mikrofon.": ["No sustained notes detected. Hold the notes a little longer and move closer to the microphone.", "Aucune note tenue détectée. Tenez les notes un peu plus longtemps et rapprochez-vous du micro."],
+  "Töne": ["Notes", "Notes"],
+  "sauber ({p} %)": ["in tune ({p} %)", "justes ({p} %)"],
+  "Ø Abweichung (Cent)": ["Avg. deviation (cents)", "Écart moyen (cents)"],
+  "Ton": ["Note", "Note"],
+  "Anzahl": ["Count", "Nombre"],
+  "Ø Cent": ["Avg. cents", "Cents moy."],
+  "Cent": ["cents", "cents"],
+  "Aufnahme anhören": ["Listen to the recording", "Écouter l’enregistrement"],
+  "Stimmton": ["Reference tone", "Note de référence"],
+  "Halten (bis erneut tippen)": ["Hold (until tapped again)", "Tenir (jusqu’au prochain appui)"],
+  "Fehler": ["Error", "Erreur"],
+  "Dieser Browser gibt hier kein Mikrofon frei (Seite muss über https geöffnet sein).": ["This browser does not allow the microphone here (the page must be opened via https).", "Ce navigateur n’autorise pas le micro ici (la page doit être ouverte en https)."],
+  "In diesem Vorschaufenster blockiert die umgebende Seite das Mikrofon, auch wenn der Browser es erlaubt hat. In der installierten App bzw. auf der eigenen Internetadresse funktioniert das Stimmgerät. Der Stimmton geht hier trotzdem.": ["In this preview window the surrounding page blocks the microphone, even if the browser allowed it. The tuner works in the installed app or at the app’s own web address. The reference tone still works here.", "Dans cette fenêtre d’aperçu, la page qui l’entoure bloque le micro, même si le navigateur l’a autorisé. L’accordeur fonctionne dans l’app installée ou à sa propre adresse web. La note de référence fonctionne quand même ici."],
+  "Kein Zugriff aufs Mikrofon. Bitte in den Browser-Einstellungen für diese Seite erlauben und neu laden.": ["No access to the microphone. Please allow it for this page in the browser settings and reload.", "Pas d’accès au micro. Autorisez-le pour cette page dans les réglages du navigateur, puis rechargez."],
+  "Kein Mikrofon gefunden.": ["No microphone found.", "Aucun micro trouvé."],
+  "Das Mikrofon wird gerade von einer anderen App benutzt.": ["The microphone is being used by another app.", "Le micro est utilisé par une autre app."],
+  "Mikrofon nicht verfügbar ({name}). Der Stimmton funktioniert trotzdem.": ["Microphone not available ({name}). The reference tone still works.", "Micro indisponible ({name}). La note de référence fonctionne quand même."],
+  // Metronom
+  "Mechanisch": ["Mechanical", "Mécanique"],
+  "Hoch": ["High", "Aigu"],
+  "Dirigentenstock": ["Conductor’s baton", "Baguette de chef"],
+  "Klatschen": ["Clapping", "Claquements de mains"],
+  "Triole": ["Triplet", "Triolet"],
+  "Langsamer": ["Slower", "Plus lent"],
+  "Schneller": ["Faster", "Plus rapide"],
+  "Schläge pro Minute": ["beats per minute", "battements par minute"],
+  "Tempo": ["Tempo", "Tempo"],
+  "■ Metronom stoppen": ["■ Stop metronome", "■ Arrêter le métronome"],
+  "▶ Metronom starten": ["▶ Start metronome", "▶ Démarrer le métronome"],
+  "Takt": ["Meter", "Mesure"],
+  "ohne": ["none", "aucune"],
+  "{b}er": ["{b} beats", "{b} temps"],
+  "Unterteilung": ["Subdivision", "Subdivision"],
+  "Betonte Eins": ["Accent on beat 1", "Premier temps accentué"],
+  // Tonleitern / Griffbrett
+  "Tonleitern über 4 Saiten": ["Scales across 4 strings", "Gammes sur 4 cordes"],
+  "Lagen": ["Positions", "Positions"],
+  "Gruppen": ["Groups", "Groupes"],
+  "Regionen": ["Regions", "Régions"],
+  "Grundton": ["Root", "Tonique"],
+  "Tonleiter": ["Scale", "Gamme"],
+  "Dur": ["Major", "Majeur"],
+  "Moll natürlich": ["Natural minor", "Mineur naturel"],
+  "Moll harmonisch": ["Harmonic minor", "Mineur harmonique"],
+  "Moll melodisch": ["Melodic minor", "Mineur mélodique"],
+  "Chromatisch": ["Chromatic", "Chromatique"],
+  "Ganzton": ["Whole tone", "Par tons"],
+  "Grundton = Drone ({n})": ["Root = drone ({n})", "Tonique = bourdon ({n})"],
+  "Lage": ["Position", "Position"],
+  "Gruppe": ["Group", "Groupe"],
+  "{g}er": ["{g} per string", "{g} par corde"],
+  "Ab Stufe": ["From degree", "À partir du degré"],
+  "Griffbrett": ["Fingerboard", "Touche"],
+  "In dieser Lage passt die Folge nicht aufs Griffbrett.": ["In this position the sequence does not fit on the fingerboard.", "Dans cette position, la séquence ne tient pas sur la touche."],
+  "{up} Töne aufwärts, {down} abwärts · kleine Zahl = Finger, 0 = leere Saite": ["{up} notes up, {down} down · small number = finger, 0 = open string", "{up} notes en montant, {down} en descendant · petit chiffre = doigt, 0 = corde à vide"],
+  ", + = Daumen (blauer Rand)": [", + = thumb (blue outline)", ", + = pouce (contour bleu)"],
+  "{g} Töne pro Saite, {up} aufwärts und zurück": ["{g} notes per string, {up} up and back", "{g} notes par corde, {up} en montant et retour"],
+  " · grüner Ring = aktueller Drone-Ton": [" · green ring = current drone note", " · anneau vert = note actuelle du bourdon"],
+  "▶ Abspielen": ["▶ Play", "▶ Jouer"],
+  "Leersaiten beim Saitenwechsel": ["Open strings when changing strings", "Cordes à vide aux changements de corde"],
+  "Alle Stufen nacheinander": ["All degrees in a row", "Tous les degrés à la suite"],
+  "Eine Oktave höher (notiert)": ["One octave higher (as written)", "Une octave plus haut (comme écrit)"],
+  // Regionen
+  "Saite": ["String", "Corde"],
+  "{s}-Saite": ["{s} string", "Corde de {s}"],
+  "Regionen der Saite": ["Regions of the string", "Régions de la corde"],
+  "Untere Lagen (Region 1–2)": ["Lower positions (regions 1–2)", "Positions basses (régions 1–2)"],
+  "Obere Lagen (ab Region 3)": ["Upper positions (from region 3)", "Positions hautes (dès la région 3)"],
+  "Sattel": ["Nut", "Sillet"],
+  "→ Steg": ["→ Bridge", "→ Chevalet"],
+  "Daumen-Lagen (Region 3: 1–4, Region 4: 1–3)": ["Thumb positions (region 3: 1–4, region 4: 1–3)", "Positions du pouce (région 3 : 1–4, région 4 : 1–3)"],
+  "◇ = Flageolett (antippen zum Anhören) · ↓ = Naturseptime, klingt tiefer · Abstände zum Steg hin gedehnt": ["◇ = harmonic (tap to listen) · ↓ = natural seventh, sounds lower · distances stretched towards the bridge", "◇ = harmonique (toucher pour écouter) · ↓ = septième naturelle, sonne plus bas · distances étirées vers le chevalet"],
+  "Region": ["Region", "Région"],
+  "untere Lagen, ab der 2. Region schon mit Daumen möglich.": ["lower positions; from region 2 the thumb can already be used.", "positions basses ; dès la région 2, le pouce est déjà possible."],
+  "obere Lagen, Daumen auf {list} (1.–4. Lage).": ["upper positions, thumb on {list} (positions 1–4).", "positions hautes, pouce sur {list} (positions 1 à 4)."],
+  "Daumen auf {list} (1.–3. Lage).": ["thumb on {list} (positions 1–3).", "pouce sur {list} (positions 1 à 3)."],
+  "Flageoletts {h}, dazu die Zwischentöne {s}.": ["harmonics {h}, plus the stopped notes {s} in between.", "harmoniques {h}, plus les notes intermédiaires {s}."],
+  "Flageoletts {h}.": ["harmonics {h}.", "harmoniques {h}."],
+  // Drone-Sequenz
+  "Drone-Sequenz": ["Drone sequence", "Séquence de bourdons"],
+  "Jetzt": ["Now", "Maintenant"],
+  "keine Töne": ["no notes", "aucune note"],
+  "Nächster": ["Next", "Suivant"],
+  "Zurück": ["Back", "Précédent"],
+  "Weiter": ["Next", "Suivant"],
+  "▶ Drone starten": ["▶ Start drone", "▶ Démarrer le bourdon"],
+  "Der Browser blockiert den Ton ({s}). Bitte Stopp und noch einmal „Drone starten“ tippen.": ["The browser is blocking the sound ({s}). Please tap Stop and then “Start drone” again.", "Le navigateur bloque le son ({s}). Touchez Stop puis à nouveau « Démarrer le bourdon »."],
+  "Tonfolge (z. B. „C G D A“, Akkorde mit Bindestrich: „C-E-G-B“, Oktave optional: „G1“)": ["Note sequence (e.g. “C G D A”, chords with hyphens: “C-E-G-B♭”, octave optional: “G1”)", "Suite de notes (p. ex. « Do Sol Ré La », accords avec tirets : « Do-Mi-Sol-Si♭ », octave facultative : « Sol1 »)"],
+  "Nicht erkannt: {e}": ["Not recognised: {e}", "Non reconnu : {e}"],
+  "Vorlage wählen…": ["Choose a preset…", "Choisir un modèle…"],
+  "Gespeichert": ["Saved", "Enregistrées"],
+  "Folge speichern": ["Save sequence", "Enregistrer la suite"],
+  "Name für diese Folge:": ["Name for this sequence:", "Nom de cette suite :"],
+  "Klang": ["Sound", "Son"],
+  "Quinte (bei Einzeltönen)": ["Fifth (single notes)", "Quinte (notes seules)"],
+  "Oktave dazu": ["Add octave", "Ajouter l’octave"],
+  "Endlos": ["Loop", "En boucle"],
+  "Leertaste": ["Space", "Espace"],
+  "Quintenzirkel": ["Circle of fifths", "Cycle des quintes"],
+  "Quartenzirkel": ["Circle of fourths", "Cycle des quartes"],
+  "Blues in F": ["Blues in F", "Blues en Fa"],
+  "Kadenz I–IV–V–I": ["Cadence I–IV–V–I", "Cadence I–IV–V–I"],
+  "Akkorde I–IV–V–I": ["Chords I–IV–V–I", "Accords I–IV–V–I"],
+  "Septakkorde (Quartenzirkel)": ["Seventh chords (circle of fourths)", "Accords de septième (cycle des quartes)"],
+  "Kontrabass": ["Double bass", "Contrebasse"],
+  "Klavier": ["Piano", "Piano"],
+  "Oboe": ["Oboe", "Hautbois"],
+  "Violine": ["Violin", "Violon"],
+  "Sinus": ["Sine", "Sinus"],
+  "Kein Ton? Lautstärke am Gerät prüfen, am iPhone den Stummschalter aus. Laptop- und Handylautsprecher geben tiefe Töne kaum wieder: Oktave 3 oder 4 wählen oder Kopfhörer nutzen.": ["No sound? Check the device volume and turn off the silent switch on iPhone. Laptop and phone speakers barely reproduce low notes: choose octave 3 or 4 or use headphones.", "Pas de son ? Vérifiez le volume de l’appareil et désactivez le mode silencieux de l’iPhone. Les haut-parleurs d’ordinateur et de téléphone rendent mal les graves : choisissez l’octave 3 ou 4 ou utilisez un casque."],
+  "Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter · zurück = Pfeil links/oben, Bild auf.": ["Pedal: next = arrow right/down, Page Down, Space, Enter · back = arrow left/up, Page Up.", "Pédale : suivant = flèche droite/bas, Page suivante, Espace, Entrée · précédent = flèche gauche/haut, Page précédente."],
+  "Zuletzt empfangen:": ["Last received:", "Dernière touche reçue :"]
+};
+function t(de, vars) {
+  const row = TR[de];
+  let s = LANG === "de" || !row ? de : row[LANG === "en" ? 0 : 1];
+  if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
+  return s;
+}
+
+// ─── Notennamen ───
+// Ein Ton ist { letter: 0–6 (C D E F G A H/B), acc: −2…+2 }.
+const NATURAL = [0, 2, 4, 5, 7, 9, 11];
+const DE_LETTERS = ["C", "D", "E", "F", "G", "A", "H"];
+const EN_LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
+const FR_SYL = ["Do", "Ré", "Mi", "Fa", "Sol", "La", "Si"];
+const pcOf = n => (NATURAL[n.letter] + n.acc + 24) % 12;
+function renderIn(lang, {
+  letter,
+  acc
+}) {
+  if (lang === "de") {
+    const L = DE_LETTERS[letter];
+    if (acc === 0) return L;
+    if (acc > 0) return L + "is".repeat(acc);
+    if (L === "H") return acc === -1 ? "B" : "Heses";
+    if (L === "E" || L === "A") return acc === -1 ? L + "s" : L + "ses";
+    return L + "es".repeat(-acc);
+  }
+  const base = lang === "fr" ? FR_SYL[letter] : EN_LETTERS[letter];
+  return base + (acc > 0 ? "♯".repeat(acc) : "♭".repeat(-acc));
+}
+const ACC = {
+  "": 0,
+  "#": 1,
+  "##": 2,
+  x: 2,
+  b: -1,
+  bb: -2
+};
+function parseIn(lang, raw) {
+  const s = raw.trim().toLowerCase().replace(/♯/g, "#").replace(/♭/g, "b");
+  let m;
+  if (lang === "en") {
+    m = s.match(/^([a-g])(##|#|x|bb|b)?(-?\d)?$/);
+    if (!m) return null;
+    return {
+      letter: "cdefgab".indexOf(m[1]),
+      acc: ACC[m[2] || ""],
+      oct: m[3]
+    };
+  }
+  if (lang === "fr") {
+    m = s.match(/^(do|ut|ré|re|mi|fa|sol|la|si)(##|#|bb|b)?(-?\d)?$/);
+    if (!m) return null;
+    const syl = {
+      do: 0,
+      ut: 0,
+      "ré": 1,
+      re: 1,
+      mi: 2,
+      fa: 3,
+      sol: 4,
+      la: 5,
+      si: 6
+    }[m[1]];
+    return {
+      letter: syl,
+      acc: ACC[m[2] || ""],
+      oct: m[3]
+    };
+  }
+  m = s.match(/^([a-h])(isis|eses|ses|is|es|s|##|#|bb|b)?(-?\d)?$/);
+  if (!m) return null;
+  const [, l, a = "", oct] = m;
+  if (l === "b") return a ? null : {
+    letter: 6,
+    acc: -1,
+    oct
+  };
+  if ((a === "s" || a === "ses") && l !== "a" && l !== "e") return null;
+  const acc = {
+    "": 0,
+    is: 1,
+    isis: 2,
+    "#": 1,
+    "##": 2,
+    es: -1,
+    s: -1,
+    b: -1,
+    eses: -2,
+    ses: -2,
+    bb: -2
+  }[a];
+  return {
+    letter: "cdefgah".indexOf(l),
+    acc,
+    oct
+  };
+}
+
+// Erst in der bevorzugten Sprache lesen, dann in den anderen (so geht auch „Fis“ im Englischen).
+function parseNote(raw, prefer = LANG) {
+  for (const l of [prefer, ...Object.keys(LANGS).filter(x => x !== prefer)]) {
+    const n = parseIn(l, raw);
+    if (n) return {
+      ...n,
+      oct: n.oct !== undefined ? Number(n.oct) : null
+    };
+  }
+  return null;
+}
+const noteLabel = n => renderIn(LANG, n);
+
+// Deutschen Notennamen (aus der Tonleiter-Logik) in der gewählten Sprache anzeigen
+function nn(germanName) {
+  if (LANG === "de") return germanName;
+  const n = parseIn("de", germanName);
+  return n ? renderIn(LANG, n) : germanName;
+}
+
+// Tonfolge (Text) aus einer Sprache in die gewählte übertragen, z. B. Vorlagen und gespeicherte Folgen
+function convertSeq(text, from) {
+  if (from === LANG) return text;
+  return text.split(/([\s,;|]+)/).map((tok, i) => i % 2 ? tok : tok.split(/([+\-])(?=[a-zA-ZÀ-ÿ])/).map((p, j) => {
+    if (j % 2) return p;
+    const n = parseNote(p, from);
+    return n ? renderIn(LANG, n) + (n.oct != null ? n.oct : "") : p;
+  }).join("")).join("");
+}
+try {
+  document.documentElement.lang = LANG;
+  document.title = t("Tonleitern & Drone");
+} catch {/* ohne Dokument */}
 
 // ─── Metronom mit vier synthetisierten Klängen ───
 // Genaues Timing über Vorausplanung im Audio-Takt (nicht über setInterval allein).
@@ -17,7 +313,7 @@ const SUBDIVISIONS = [{
   label: "♪♪",
   n: 2
 }, {
-  label: "Triole",
+  label: t("Triole"),
   n: 3
 }, {
   label: "♬♬",
@@ -244,28 +540,28 @@ function Metronom() {
     className: "mt"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ds-sub"
-  }, "Metronom"), /*#__PURE__*/React.createElement("div", {
+  }, t("Metronom")), /*#__PURE__*/React.createElement("div", {
     className: "mt-sounds"
   }, METRO_SOUNDS.map(s => /*#__PURE__*/React.createElement("button", {
     key: s,
     className: `ds-chip ${s === sound ? "active" : ""}`,
     onClick: () => preview(s)
-  }, s))), /*#__PURE__*/React.createElement("div", {
+  }, t(s)))), /*#__PURE__*/React.createElement("div", {
     className: "mt-main"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ds-btn",
     onClick: () => setBpm(b => Math.max(30, b - 1)),
-    "aria-label": "Langsamer"
+    "aria-label": t("Langsamer")
   }, "\u2212"), /*#__PURE__*/React.createElement("div", {
     className: "mt-bpm"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mt-num"
   }, bpm), /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Schl\xE4ge pro Minute")), /*#__PURE__*/React.createElement("button", {
+  }, t("Schläge pro Minute"))), /*#__PURE__*/React.createElement("button", {
     className: "ds-btn",
     onClick: () => setBpm(b => Math.min(240, b + 1)),
-    "aria-label": "Schneller"
+    "aria-label": t("Schneller")
   }, "+")), /*#__PURE__*/React.createElement("input", {
     className: "mt-slider",
     type: "range",
@@ -273,7 +569,7 @@ function Metronom() {
     max: 240,
     value: bpm,
     onChange: e => setBpm(Number(e.target.value)),
-    "aria-label": "Tempo"
+    "aria-label": t("Tempo")
   }), /*#__PURE__*/React.createElement("div", {
     className: "mt-dots",
     "aria-hidden": "true"
@@ -287,18 +583,20 @@ function Metronom() {
   }, /*#__PURE__*/React.createElement("button", {
     className: `ds-btn ds-main ${running ? "on" : ""}`,
     onClick: running ? stop : start
-  }, running ? "■ Metronom stoppen" : "▶ Metronom starten"), /*#__PURE__*/React.createElement("button", {
+  }, running ? t("■ Metronom stoppen") : t("▶ Metronom starten")), /*#__PURE__*/React.createElement("button", {
     className: "ds-btn",
     onClick: tap
   }, "Tap")), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
-  }, /*#__PURE__*/React.createElement("label", null, "Takt", " ", /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("label", null, t("Takt"), " ", /*#__PURE__*/React.createElement("select", {
     value: beats,
     onChange: e => setBeats(Number(e.target.value))
   }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 12].map(b => /*#__PURE__*/React.createElement("option", {
     key: b,
     value: b
-  }, b === 1 ? "ohne" : `${b}er`)))), /*#__PURE__*/React.createElement("label", null, "Unterteilung", " ", /*#__PURE__*/React.createElement("select", {
+  }, b === 1 ? t("ohne") : t("{b}er", {
+    b
+  }))))), /*#__PURE__*/React.createElement("label", null, t("Unterteilung"), " ", /*#__PURE__*/React.createElement("select", {
     value: sub,
     onChange: e => setSub(Number(e.target.value))
   }, SUBDIVISIONS.map(s => /*#__PURE__*/React.createElement("option", {
@@ -308,7 +606,7 @@ function Metronom() {
     type: "checkbox",
     checked: accent,
     onChange: e => setAccent(e.target.checked)
-  }), " Betonte Eins"), /*#__PURE__*/React.createElement("label", null, "Lautst\xE4rke", " ", /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Betonte Eins")), /*#__PURE__*/React.createElement("label", null, t("Lautstärke"), " ", /*#__PURE__*/React.createElement("input", {
     type: "range",
     min: 0,
     max: 1,
@@ -327,7 +625,7 @@ function Metronom() {
 function midiToFreq(midi, a4) {
   return a4 * Math.pow(2, (midi - 69) / 12);
 }
-const NOTE_NAMES = ["C", "Cis", "D", "Es", "E", "F", "Fis", "G", "As", "A", "B", "H"];
+const NOTE_NAMES = ["C", "Cis", "D", "Es", "E", "F", "Fis", "G", "As", "A", "B", "H"].map(nn);
 const A4_CHOICES = Array.from({
   length: 26
 }, (_, i) => 420 + i);
@@ -386,13 +684,15 @@ function inFrame() {
   }
 }
 function micErrorText(e) {
-  const name = e?.name || "Fehler";
-  if (!navigator.mediaDevices?.getUserMedia) return "Dieser Browser gibt hier kein Mikrofon frei (Seite muss über https geöffnet sein).";
-  if (inFrame() && (name === "NotAllowedError" || name === "SecurityError")) return "In diesem Vorschaufenster blockiert die umgebende Seite das Mikrofon, auch wenn der Browser es erlaubt hat. In der installierten App bzw. auf der eigenen Internetadresse funktioniert das Stimmgerät. Der Stimmton geht hier trotzdem.";
-  if (name === "NotAllowedError") return "Kein Zugriff aufs Mikrofon. Bitte in den Browser-Einstellungen für diese Seite erlauben und neu laden.";
-  if (name === "NotFoundError") return "Kein Mikrofon gefunden.";
-  if (name === "NotReadableError") return "Das Mikrofon wird gerade von einer anderen App benutzt.";
-  return `Mikrofon nicht verfügbar (${name}). Der Stimmton funktioniert trotzdem.`;
+  const name = e?.name || t("Fehler");
+  if (!navigator.mediaDevices?.getUserMedia) return t("Dieser Browser gibt hier kein Mikrofon frei (Seite muss über https geöffnet sein).");
+  if (inFrame() && (name === "NotAllowedError" || name === "SecurityError")) return t("In diesem Vorschaufenster blockiert die umgebende Seite das Mikrofon, auch wenn der Browser es erlaubt hat. In der installierten App bzw. auf der eigenen Internetadresse funktioniert das Stimmgerät. Der Stimmton geht hier trotzdem.");
+  if (name === "NotAllowedError") return t("Kein Zugriff aufs Mikrofon. Bitte in den Browser-Einstellungen für diese Seite erlauben und neu laden.");
+  if (name === "NotFoundError") return t("Kein Mikrofon gefunden.");
+  if (name === "NotReadableError") return t("Das Mikrofon wird gerade von einer anderen App benutzt.");
+  return t("Mikrofon nicht verfügbar ({name}). Der Stimmton funktioniert trotzdem.", {
+    name
+  });
 }
 const median = arr => {
   const s = [...arr].sort((a, b) => a - b);
@@ -404,9 +704,9 @@ function verdict(cents, tol) {
   return "ok";
 }
 const VERDICT_TEXT = {
-  tief: "zu tief",
-  ok: "sauber",
-  hoch: "zu hoch"
+  tief: t("zu tief"),
+  ok: t("sauber"),
+  hoch: t("zu hoch")
 };
 
 // Zusammenfassung der aufgenommenen Töne
@@ -711,7 +1011,7 @@ function Stimmgeraet({
     className: "tu-head"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ds-sub"
-  }, "Stimmger\xE4t"), /*#__PURE__*/React.createElement("label", null, "Kammerton a\xB9", " ", /*#__PURE__*/React.createElement("select", {
+  }, t("Stimmgerät")), /*#__PURE__*/React.createElement("label", null, t("Kammerton a¹"), " ", /*#__PURE__*/React.createElement("select", {
     value: a4,
     onChange: e => setA4(Number(e.target.value))
   }, A4_CHOICES.map(f => /*#__PURE__*/React.createElement("option", {
@@ -737,9 +1037,9 @@ function Stimmgeraet({
     className: "tu-note"
   }, reading ? reading.name : "–", reading && /*#__PURE__*/React.createElement("sub", null, reading.octave)), /*#__PURE__*/React.createElement("span", {
     className: `tu-verdict ${v || ""}`
-  }, reading ? VERDICT_TEXT[v] : on ? "Spiel einen Ton…" : "Mikrofon aus"), /*#__PURE__*/React.createElement("span", {
+  }, reading ? VERDICT_TEXT[v] : on ? t("Spiel einen Ton…") : t("Mikrofon aus")), /*#__PURE__*/React.createElement("span", {
     className: "tu-info"
-  }, reading ? `${cents > 0 ? "+" : ""}${cents} Cent · ${reading.freq.toFixed(1)} Hz` : " "))), /*#__PURE__*/React.createElement(Trace, {
+  }, reading ? `${cents > 0 ? "+" : ""}${cents} ${t("Cent")} · ${reading.freq.toFixed(1)} Hz` : " "))), /*#__PURE__*/React.createElement(Trace, {
     trace: trace,
     tol: tol
   })), /*#__PURE__*/React.createElement("div", {
@@ -748,38 +1048,46 @@ function Stimmgeraet({
     className: "ds-btn-sm",
     onClick: on ? stopMic : startMic,
     disabled: recording
-  }, on ? "Stimmgerät aus" : "🎤 Stimmgerät an"), /*#__PURE__*/React.createElement("button", {
+  }, on ? t("Stimmgerät aus") : t("🎤 Stimmgerät an")), /*#__PURE__*/React.createElement("button", {
     className: `ds-btn-sm ${recording ? "rec" : ""}`,
     onClick: recording ? stopRecording : startRecording
-  }, recording ? `■ Aufnahme beenden (${events.length} Töne)` : "● Aufnahme mit Auswertung"), /*#__PURE__*/React.createElement("label", null, "Sauber bis \xB1", " ", /*#__PURE__*/React.createElement("select", {
+  }, recording ? t("■ Aufnahme beenden ({n} Töne)", {
+    n: events.length
+  }) : t("● Aufnahme mit Auswertung")), /*#__PURE__*/React.createElement("label", null, t("Sauber bis ±"), " ", /*#__PURE__*/React.createElement("select", {
     value: tol,
     onChange: e => setTol(Number(e.target.value))
-  }, TOLERANCES.map(t => /*#__PURE__*/React.createElement("option", {
-    key: t,
-    value: t
-  }, t, " Cent"))))), recording && liveSum && /*#__PURE__*/React.createElement("p", {
+  }, TOLERANCES.map(x => /*#__PURE__*/React.createElement("option", {
+    key: x,
+    value: x
+  }, x, " ", t("Cent")))))), recording && liveSum && /*#__PURE__*/React.createElement("p", {
     className: "tu-info"
-  }, "Bisher: ", liveSum.count.ok, " sauber \xB7 ", liveSum.count.tief, " zu tief \xB7 ", liveSum.count.hoch, " zu hoch"), sum && /*#__PURE__*/React.createElement("div", {
+  }, t("Bisher: {ok} sauber · {low} zu tief · {high} zu hoch", {
+    ok: liveSum.count.ok,
+    low: liveSum.count.tief,
+    high: liveSum.count.hoch
+  })), sum && /*#__PURE__*/React.createElement("div", {
     className: "tu-result"
-  }, /*#__PURE__*/React.createElement("h4", null, "Auswertung"), sum.total === 0 ? /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("h4", null, t("Auswertung")), sum.total === 0 ? /*#__PURE__*/React.createElement("p", {
     className: "tu-info"
-  }, "Keine gehaltenen T\xF6ne erkannt. T\xF6ne etwas l\xE4nger halten und n\xE4her ans Mikrofon.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, t("Keine gehaltenen Töne erkannt. Töne etwas länger halten und näher ans Mikrofon.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "tu-stats"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, sum.total), /*#__PURE__*/React.createElement("span", null, "T\xF6ne")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, sum.total), /*#__PURE__*/React.createElement("span", null, t("Töne"))), /*#__PURE__*/React.createElement("div", {
     className: "ok"
-  }, /*#__PURE__*/React.createElement("b", null, sum.count.ok), /*#__PURE__*/React.createElement("span", null, "sauber (", Math.round(sum.count.ok / sum.total * 100), " %)")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, sum.count.ok), /*#__PURE__*/React.createElement("span", null, t("sauber ({p} %)", {
+    p: Math.round(sum.count.ok / sum.total * 100)
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "tief"
-  }, /*#__PURE__*/React.createElement("b", null, sum.count.tief), /*#__PURE__*/React.createElement("span", null, "zu tief")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, sum.count.tief), /*#__PURE__*/React.createElement("span", null, t("zu tief"))), /*#__PURE__*/React.createElement("div", {
     className: "hoch"
-  }, /*#__PURE__*/React.createElement("b", null, sum.count.hoch), /*#__PURE__*/React.createElement("span", null, "zu hoch")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, sum.avgAbs), /*#__PURE__*/React.createElement("span", null, "\xD8 Abweichung (Cent)"))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, sum.count.hoch), /*#__PURE__*/React.createElement("span", null, t("zu hoch"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, sum.avgAbs), /*#__PURE__*/React.createElement("span", null, t("Ø Abweichung (Cent)")))), /*#__PURE__*/React.createElement("div", {
     className: "tu-seq"
   }, result.map((e, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
     className: `tu-ev ${verdict(e.cents, tol)}`,
-    title: `${e.cents > 0 ? "+" : ""}${e.cents} Cent`
+    title: `${e.cents > 0 ? "+" : ""}${e.cents} ${t("Cent")}`
   }, e.name, /*#__PURE__*/React.createElement("sub", null, e.cents > 0 ? "+" : "", e.cents)))), /*#__PURE__*/React.createElement("table", {
     className: "tu-table"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Ton"), /*#__PURE__*/React.createElement("th", null, "Anzahl"), /*#__PURE__*/React.createElement("th", null, "\xD8 Cent"), /*#__PURE__*/React.createElement("th", null, "zu tief"), /*#__PURE__*/React.createElement("th", null, "sauber"), /*#__PURE__*/React.createElement("th", null, "zu hoch"))), /*#__PURE__*/React.createElement("tbody", null, sum.rows.map(r => /*#__PURE__*/React.createElement("tr", {
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, t("Ton")), /*#__PURE__*/React.createElement("th", null, t("Anzahl")), /*#__PURE__*/React.createElement("th", null, t("Ø Cent")), /*#__PURE__*/React.createElement("th", null, t("zu tief")), /*#__PURE__*/React.createElement("th", null, t("sauber")), /*#__PURE__*/React.createElement("th", null, t("zu hoch")))), /*#__PURE__*/React.createElement("tbody", null, sum.rows.map(r => /*#__PURE__*/React.createElement("tr", {
     key: r.name + r.octave
   }, /*#__PURE__*/React.createElement("td", null, r.name, /*#__PURE__*/React.createElement("sub", null, r.octave)), /*#__PURE__*/React.createElement("td", null, r.n), /*#__PURE__*/React.createElement("td", {
     className: verdict(r.avg, tol)
@@ -787,14 +1095,14 @@ function Stimmgeraet({
     className: "tu-audio"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Aufnahme anh\xF6ren"), /*#__PURE__*/React.createElement("audio", {
+  }, t("Aufnahme anhören")), /*#__PURE__*/React.createElement("audio", {
     controls: true,
     src: audioUrl
   }))), /*#__PURE__*/React.createElement("div", {
     className: "tu-ref"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Stimmton"), /*#__PURE__*/React.createElement("div", {
+  }, t("Stimmton")), /*#__PURE__*/React.createElement("div", {
     className: "tu-keys"
   }, NOTE_NAMES.map((n, pc) => {
     const midi = 12 * (refOctave + 1) + pc;
@@ -806,7 +1114,7 @@ function Stimmgeraet({
     }, n);
   })), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
-  }, /*#__PURE__*/React.createElement("label", null, "Oktave", " ", /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("label", null, t("Oktave"), " ", /*#__PURE__*/React.createElement("select", {
     value: refOctave,
     onChange: e => setRefOctave(Number(e.target.value))
   }, [1, 2, 3, 4, 5].map(o => /*#__PURE__*/React.createElement("option", {
@@ -816,7 +1124,7 @@ function Stimmgeraet({
     type: "checkbox",
     checked: hold,
     onChange: e => setHold(e.target.checked)
-  }), " Halten (bis erneut tippen)"), refMidi != null && /*#__PURE__*/React.createElement("span", {
+  }), " ", t("Halten (bis erneut tippen)")), refMidi != null && /*#__PURE__*/React.createElement("span", {
     className: "tu-info"
   }, NOTE_NAMES[refMidi % 12], Math.floor(refMidi / 12) - 1, " = ", midiToFreq(refMidi, a4).toFixed(1), " Hz"))), error && /*#__PURE__*/React.createElement("p", {
     className: "ds-error"
@@ -1054,7 +1362,7 @@ function scaleContext(rootIndex, scale) {
     const deg = up.indexOf((midi - root.pc + 1200) % 12);
     return deg < 0 ? 0 : down[deg] - up[deg];
   };
-  const name = (midi, desc) => spell(root, desc && down ? down : up, pcOf(midi));
+  const name = (midi, desc) => nn(spell(root, desc && down ? down : up, pcOf(midi)));
   return {
     root,
     up,
@@ -1295,7 +1603,7 @@ function Fingerboard({
     className: "fb",
     viewBox: `0 0 ${W} 200`,
     role: "img",
-    "aria-label": "Griffbrett"
+    "aria-label": t("Griffbrett")
   }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
     id: "fbWood",
     x1: "0",
@@ -1345,7 +1653,7 @@ function Fingerboard({
     textAnchor: "middle",
     fontSize: "11",
     fill: "var(--muted)"
-  }, "Lage"), /*#__PURE__*/React.createElement("rect", {
+  }, t("Lage")), /*#__PURE__*/React.createElement("rect", {
     x: NUT_X - 5,
     y: 16,
     width: 7,
@@ -1362,12 +1670,12 @@ function Fingerboard({
     stroke: "var(--fb-string)",
     strokeWidth: 1 + (3 - i) * 0.6
   }), /*#__PURE__*/React.createElement("text", {
-    x: 10,
+    x: 6,
     y: STRING_Y(i) + 5,
-    fontSize: "14",
+    fontSize: nn(s.name).length > 1 ? 12 : 14,
     fontWeight: "700",
     fill: "var(--wood)"
-  }, s.name))), Object.entries(used).map(([k, list]) => {
+  }, nn(s.name)))), Object.entries(used).map(([k, list]) => {
     const n = list[0];
     const x = noteX(n.fret);
     const y = STRING_Y(n.string);
@@ -1504,23 +1812,25 @@ function Regionen({
 }) {
   const [stringIdx, setStringIdx] = useState(3);
   const open = STRINGS[stringIdx].midi;
-  const nm = semi => SHARP_NAMES[(open + semi) % 12];
+  const nm = semi => nn(SHARP_NAMES[(open + semi) % 12]);
   const laneY = lane => 52 + lane * 80;
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Saite"), STRINGS.map((s, i) => /*#__PURE__*/React.createElement("button", {
+  }, t("Saite")), STRINGS.map((s, i) => /*#__PURE__*/React.createElement("button", {
     key: s.name,
     className: `ds-chip ${i === stringIdx ? "active" : ""}`,
     onClick: () => setStringIdx(i)
-  }, s.name, "-Saite"))), /*#__PURE__*/React.createElement("div", {
+  }, t("{s}-Saite", {
+    s: nn(s.name)
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "fb-wrap"
   }, /*#__PURE__*/React.createElement("svg", {
     className: "fb rg",
     viewBox: `0 0 ${RW} 320`,
     role: "img",
-    "aria-label": "Regionen der Saite"
+    "aria-label": t("Regionen der Saite")
   }, /*#__PURE__*/React.createElement("text", {
     x: (rx(0) + rx(0.5)) / 2,
     y: 16,
@@ -1528,14 +1838,14 @@ function Regionen({
     fontSize: "13",
     fontWeight: "700",
     fill: "var(--wood)"
-  }, "Untere Lagen (Region 1\u20132)"), /*#__PURE__*/React.createElement("text", {
+  }, t("Untere Lagen (Region 1–2)")), /*#__PURE__*/React.createElement("text", {
     x: (rx(0.5) + rx(0.92)) / 2,
     y: 16,
     textAnchor: "middle",
     fontSize: "13",
     fontWeight: "700",
     fill: "var(--wood)"
-  }, "Obere Lagen (ab Region 3)"), /*#__PURE__*/React.createElement("line", {
+  }, t("Obere Lagen (ab Region 3)")), /*#__PURE__*/React.createElement("line", {
     x1: rx(0.5),
     x2: rx(0.5),
     y1: 22,
@@ -1555,13 +1865,13 @@ function Regionen({
     textAnchor: "middle",
     fontSize: "11",
     fill: "var(--muted)"
-  }, "Sattel"), /*#__PURE__*/React.createElement("text", {
+  }, t("Sattel")), /*#__PURE__*/React.createElement("text", {
     x: RX1 - 4,
     y: 196,
     textAnchor: "end",
     fontSize: "11",
     fill: "var(--muted)"
-  }, "\u2192 Steg"), REGIONS.map(r => {
+  }, t("→ Steg")), REGIONS.map(r => {
     const y = laneY(r.lane);
     const x0 = rx(r.from);
     const x1 = rx(r.to);
@@ -1632,7 +1942,7 @@ function Regionen({
     textAnchor: "start",
     fontSize: "10",
     fill: "var(--fb-blue)"
-  }, "Daumen-Lagen (Region 3: 1\u20134, Region 4: 1\u20133)"), R5_STOPPED.map(f => {
+  }, t("Daumen-Lagen (Region 3: 1–4, Region 4: 1–3)")), R5_STOPPED.map(f => {
     const x = rx(fretFrac(f));
     return /*#__PURE__*/React.createElement("g", {
       key: f,
@@ -1677,9 +1987,20 @@ function Regionen({
     y: 312,
     fontSize: "11",
     fill: "var(--muted)"
-  }, "\u25C7 = Flageolett (antippen zum Anh\xF6ren) \xB7 \u2193 = Naturseptime, klingt tiefer \xB7 Abst\xE4nde zum Steg hin gedehnt"))), /*#__PURE__*/React.createElement("ul", {
+  }, t("◇ = Flageolett (antippen zum Anhören) · ↓ = Naturseptime, klingt tiefer · Abstände zum Steg hin gedehnt")))), /*#__PURE__*/React.createElement("ul", {
     className: "rg-list"
-  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Region 1\u20132"), " (", nm(0), "\u2013", nm(19), "\u2013", nm(24), "): untere Lagen, ab der 2. Region schon mit Daumen m\xF6glich."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Region 3"), " (", nm(12), "\u2013", nm(19), "): obere Lagen, Daumen auf ", [12, 14, 16, 17].map(nm).join(", "), " (1.\u20134. Lage)."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Region 4"), " (", nm(19), "\u2013", nm(24), "): Daumen auf ", [19, 21, 22].map(nm).join(", "), " (1.\u20133. Lage)."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Region 5"), " (", nm(24), "\u2013", nm(31), "): Flageoletts ", [24, 28, 31].map(nm).join("–"), ", dazu die Zwischent\xF6ne ", R5_STOPPED.map(nm).join(" "), "."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Region 6"), ": Flageoletts ", [28, 31, 34, 36].map(nm).join("–"), "."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Region 7"), ": Flageoletts ", [31, 34, 36, 38, 40].map(nm).join("–"), ".")));
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, t("Region"), " 1\u20132"), " (", nm(0), "\u2013", nm(19), "\u2013", nm(24), "): ", t("untere Lagen, ab der 2. Region schon mit Daumen möglich.")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, t("Region"), " 3"), " (", nm(12), "\u2013", nm(19), "): ", t("obere Lagen, Daumen auf {list} (1.–4. Lage).", {
+    list: [12, 14, 16, 17].map(nm).join(", ")
+  })), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, t("Region"), " 4"), " (", nm(19), "\u2013", nm(24), "): ", t("Daumen auf {list} (1.–3. Lage).", {
+    list: [19, 21, 22].map(nm).join(", ")
+  })), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, t("Region"), " 5"), " (", nm(24), "\u2013", nm(31), "): ", t("Flageoletts {h}, dazu die Zwischentöne {s}.", {
+    h: [24, 28, 31].map(nm).join("–"),
+    s: R5_STOPPED.map(nm).join(" ")
+  })), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, t("Region"), " 6"), ": ", t("Flageoletts {h}.", {
+    h: [28, 31, 34, 36].map(nm).join("–")
+  })), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, t("Region"), " 7"), ": ", t("Flageoletts {h}.", {
+    h: [31, 34, 36, 38, 40].map(nm).join("–")
+  }))));
 }
 
 // ─── Hauptbaustein ───
@@ -1799,7 +2120,7 @@ function GriffbrettTonleiter({
     className: "gt"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ds-sub"
-  }, "Tonleitern \xFCber 4 Saiten"), /*#__PURE__*/React.createElement("div", {
+  }, t("Tonleitern über 4 Saiten")), /*#__PURE__*/React.createElement("div", {
     className: "gt-tabs",
     role: "tablist"
   }, [["lage", "Lagen"], ["gruppen", "Gruppen"], ["regionen", "Regionen"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
@@ -1811,29 +2132,32 @@ function GriffbrettTonleiter({
       stop();
       setMode(k);
     }
-  }, l))), mode === "regionen" ? /*#__PURE__*/React.createElement(Regionen, {
+  }, t(l)))), mode === "regionen" ? /*#__PURE__*/React.createElement(Regionen, {
     onPlay: playMidi
   }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
-  }, /*#__PURE__*/React.createElement("label", null, "Grundton", " ", /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("label", null, t("Grundton"), " ", /*#__PURE__*/React.createElement("select", {
     value: rootIndex,
     onChange: e => setRootIndex(Number(e.target.value))
   }, ROOTS.map((r, i) => /*#__PURE__*/React.createElement("option", {
     key: r.name,
     value: i
-  }, r.name)))), /*#__PURE__*/React.createElement("label", null, "Tonleiter", " ", /*#__PURE__*/React.createElement("select", {
+  }, nn(r.name))))), /*#__PURE__*/React.createElement("label", null, t("Tonleiter"), " ", /*#__PURE__*/React.createElement("select", {
     value: scale,
     onChange: e => setScale(e.target.value)
   }, Object.keys(SCALES).map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), droneRootIndex >= 0 && droneRootIndex !== rootIndex && /*#__PURE__*/React.createElement("button", {
+    key: s,
+    value: s
+  }, t(s))))), droneRootIndex >= 0 && droneRootIndex !== rootIndex && /*#__PURE__*/React.createElement("button", {
     className: "ds-btn-sm",
     onClick: () => setRootIndex(droneRootIndex)
-  }, "Grundton = Drone (", ROOTS[droneRootIndex].name, ")")), /*#__PURE__*/React.createElement("div", {
+  }, t("Grundton = Drone ({n})", {
+    n: nn(ROOTS[droneRootIndex].name)
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "gt-lagen"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Lage"), LAGEN.map((l, i) => /*#__PURE__*/React.createElement("button", {
+  }, t("Lage")), LAGEN.map((l, i) => /*#__PURE__*/React.createElement("button", {
     key: l.label,
     className: `ds-chip ${i === lage ? "active" : ""} ${l.half ? "half" : ""}`,
     onClick: () => {
@@ -1844,15 +2168,17 @@ function GriffbrettTonleiter({
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Gruppe"), [3, 4, 5, 6].map(g => /*#__PURE__*/React.createElement("button", {
+  }, t("Gruppe")), [3, 4, 5, 6].map(g => /*#__PURE__*/React.createElement("button", {
     key: g,
     className: `ds-chip ${g === groupSize ? "active" : ""}`,
     onClick: () => setGroupSize(g)
-  }, g, "er"))), /*#__PURE__*/React.createElement("div", {
+  }, t("{g}er", {
+    g
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "gt-lagen"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Ab Stufe"), stages.map((nm, k) => /*#__PURE__*/React.createElement("button", {
+  }, t("Ab Stufe")), stages.map((nm, k) => /*#__PURE__*/React.createElement("button", {
     key: k,
     className: `ds-chip ${k === stage ? "active" : ""}`,
     onClick: () => setStage(k)
@@ -1867,7 +2193,7 @@ function GriffbrettTonleiter({
     showWindow: mode === "lage"
   })), notes.length === 0 ? /*#__PURE__*/React.createElement("p", {
     className: "ds-error"
-  }, "In dieser Lage passt die Folge nicht aufs Griffbrett.") : /*#__PURE__*/React.createElement("div", {
+  }, t("In dieser Lage passt die Folge nicht aufs Griffbrett.")) : /*#__PURE__*/React.createElement("div", {
     className: "gt-seq"
   }, notes.map((n, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
@@ -1877,12 +2203,18 @@ function GriffbrettTonleiter({
     style: {
       marginTop: 4
     }
-  }, mode === "lage" ? `${up} Töne aufwärts, ${notes.length - up} abwärts · kleine Zahl = Finger, 0 = leere Saite${thumb ? ", + = Daumen (blauer Rand)" : ""}` : `${groupSize} Töne pro Saite, ${up} aufwärts und zurück`, dronePcs && " · grüner Ring = aktueller Drone-Ton"), /*#__PURE__*/React.createElement("div", {
+  }, mode === "lage" ? t("{up} Töne aufwärts, {down} abwärts · kleine Zahl = Finger, 0 = leere Saite", {
+    up,
+    down: notes.length - up
+  }) + (thumb ? t(", + = Daumen (blauer Rand)") : "") : t("{g} Töne pro Saite, {up} aufwärts und zurück", {
+    g: groupSize,
+    up
+  }), dronePcs && t(" · grüner Ring = aktueller Drone-Ton")), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     className: `ds-btn-sm ${playing ? "on" : ""}`,
     onClick: play
-  }, playing ? "■ Stopp" : "▶ Abspielen"), /*#__PURE__*/React.createElement("label", null, "Tempo ", bpm, " ", /*#__PURE__*/React.createElement("input", {
+  }, playing ? t("■ Stopp") : t("▶ Abspielen")), /*#__PURE__*/React.createElement("label", null, t("Tempo"), " ", bpm, " ", /*#__PURE__*/React.createElement("input", {
     type: "range",
     min: 40,
     max: 180,
@@ -1892,54 +2224,30 @@ function GriffbrettTonleiter({
     type: "checkbox",
     checked: openStrings,
     onChange: e => setOpenStrings(e.target.checked)
-  }), " Leersaiten beim Saitenwechsel"), mode === "gruppen" && /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Leersaiten beim Saitenwechsel")), mode === "gruppen" && /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: allStages,
     onChange: e => setAllStages(e.target.checked)
-  }), " Alle Stufen nacheinander"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Alle Stufen nacheinander")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: notated,
     onChange: e => setNotated(e.target.checked)
-  }), " Eine Oktave h\xF6her (notiert)"))));
+  }), " ", t("Eine Oktave höher (notiert)")))));
 }
 
 // ─── Drone-Sequenz ───────────────────────────────────────────────
 // Tonfolge eingeben, jeder Ton (oder Akkord, z. B. „C-E-G-B“) wird als gehaltener Bordun gespielt.
 // Mit dem Bluetooth-Pedal (Page Turner) vor/zurück durch die Folge.
 
-const PC = {
-  c: 0,
-  d: 2,
-  e: 4,
-  f: 5,
-  g: 7,
-  a: 9,
-  h: 11
-};
-
-// Deutsche und englische Schreibweise: C Cis Des D Es E F Fis Ges G As A B H, auch C# Eb Bb.
+// Notennamen in allen drei Sprachen: C Cis Des H B / C C♯ D♭ B B♭ / Do Do♯ Ré♭ Si Si♭ (auch # und b).
 // Optional Oktavzahl am Ende (z. B. "G1"), sonst gilt die gewählte Drone-Oktave.
 function parseToken(raw) {
-  const t = raw.trim().toLowerCase();
-  const m = t.match(/^([a-h])(isis|eses|is|es|s|#|b)?(-?\d)?$/);
-  if (!m) return null;
-  const [, letter, acc = "", oct] = m;
-  let pc;
-  if (letter === "b") {
-    if (acc) return null;
-    pc = 10;
-  } else {
-    pc = PC[letter];
-    if (acc === "is" || acc === "#") pc += 1;else if (acc === "isis") pc += 2;else if (acc === "eses") pc -= 2;else if (acc === "es" || acc === "b") pc -= 1;else if (acc === "s") {
-      if (letter !== "a" && letter !== "e") return null;
-      pc -= 1;
-    }
-  }
-  const label = raw.trim().charAt(0).toUpperCase() + raw.trim().slice(1).replace(/-?\d$/, "");
+  const n = parseNote(raw);
+  if (!n) return null;
   return {
-    label,
-    pc: (pc + 12) % 12,
-    octave: oct !== undefined ? Number(oct) : null
+    label: noteLabel(n),
+    pc: pcOf(n),
+    octave: n.oct
   };
 }
 
@@ -1949,7 +2257,7 @@ function parseSequence(text) {
   const notes = [];
   const errors = [];
   tokens.forEach(tok => {
-    const parts = tok.split(/[+\-](?=[a-hA-H])/).filter(Boolean);
+    const parts = tok.split(/[+\-](?=[a-zA-ZÀ-ÿ])/).filter(Boolean);
     const parsed = parts.map(parseToken);
     if (parsed.length && parsed.every(Boolean)) {
       notes.push({
@@ -1966,7 +2274,7 @@ function parseSequence(text) {
     errors
   };
 }
-const PRESETS = {
+const PRESETS_DE = {
   Quintenzirkel: "C G D A E H Fis Des As Es B F",
   Quartenzirkel: "C F B Es As Des Fis H E A D G",
   Chromatisch: "C Cis D Es E F Fis G As A B H",
@@ -1975,6 +2283,8 @@ const PRESETS = {
   "Akkorde I–IV–V–I": "C-E-G F-A-C G-H-D C-E-G",
   "Septakkorde (Quartenzirkel)": "C-E-G-B F-A-C-Es B-D-F-As Es-G-B-Des"
 };
+// Vorlagen in der gewählten Sprache
+const PRESETS = Object.fromEntries(Object.entries(PRESETS_DE).map(([k, v]) => [k, convertSeq(v, "de")]));
 
 // Klangfarben passend zur Tonleiter-App (synthetisiert).
 const TIMBRES = {
@@ -2082,8 +2392,10 @@ function DroneSequenz() {
   useEffect(() => {
     loadSaved().then(d => {
       if (!d) return;
-      if (d.text) setText(d.text);
-      if (d.saved) setSaved(d.saved);
+      // in einer anderen Sprache gespeicherte Folgen umschreiben (ältere Daten sind deutsch)
+      const from = d.lang || "de";
+      if (d.text) setText(convertSeq(d.text, from));
+      if (d.saved) setSaved(Object.fromEntries(Object.entries(d.saved).map(([k, v]) => [k, convertSeq(v, from)])));
       if (d.octave) setOctave(d.octave);
       if (d.timbre && TIMBRES[d.timbre]) setTimbre(d.timbre);
       if (d.a4 >= 420 && d.a4 <= 445) setA4(d.a4);
@@ -2095,7 +2407,8 @@ function DroneSequenz() {
       saved,
       octave,
       timbre,
-      a4
+      a4,
+      lang: LANG
     });
   }, [text, saved, octave, timbre, a4]);
 
@@ -2221,7 +2534,7 @@ function DroneSequenz() {
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if (NEXT_KEYS.includes(e.key)) {
         e.preventDefault();
-        setLastKey(e.key === " " ? "Leertaste" : e.key);
+        setLastKey(e.key === " " ? t("Leertaste") : e.key);
         step(1);
       } else if (PREV_KEYS.includes(e.key)) {
         e.preventDefault();
@@ -2248,7 +2561,7 @@ function DroneSequenz() {
     document.activeElement?.blur?.();
   };
   const saveCurrent = () => {
-    const name = window.prompt("Name für diese Folge:");
+    const name = window.prompt(t("Name für diese Folge:"));
     if (name) setSaved(s => ({
       ...s,
       [name]: text
@@ -2256,19 +2569,31 @@ function DroneSequenz() {
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "ds"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ds-head"
   }, /*#__PURE__*/React.createElement("h2", {
     className: "ds-title"
-  }, "Tonleitern & Drone"), /*#__PURE__*/React.createElement("nav", {
+  }, t("Tonleitern & Drone")), /*#__PURE__*/React.createElement("div", {
+    className: "ds-lang",
+    role: "group",
+    "aria-label": t("Sprache")
+  }, Object.entries(LANGS).map(([k, name]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    className: `ds-chip ${k === LANG ? "active" : ""}`,
+    title: name,
+    "aria-pressed": k === LANG,
+    onClick: () => k !== LANG && setLang(k)
+  }, k.toUpperCase())))), /*#__PURE__*/React.createElement("nav", {
     className: "ds-nav"
   }, /*#__PURE__*/React.createElement("a", {
     href: "#stimmgeraet"
-  }, "Stimmger\xE4t"), /*#__PURE__*/React.createElement("a", {
+  }, t("Stimmgerät")), /*#__PURE__*/React.createElement("a", {
     href: "#metronom"
-  }, "Metronom"), /*#__PURE__*/React.createElement("a", {
+  }, t("Metronom")), /*#__PURE__*/React.createElement("a", {
     href: "#tonleitern"
-  }, "Tonleitern"), /*#__PURE__*/React.createElement("a", {
+  }, t("Tonleitern")), /*#__PURE__*/React.createElement("a", {
     href: "#drone"
-  }, "Drone")), /*#__PURE__*/React.createElement("section", {
+  }, t("Drone"))), /*#__PURE__*/React.createElement("section", {
     id: "stimmgeraet"
   }, /*#__PURE__*/React.createElement(Stimmgeraet, {
     a4: a4,
@@ -2287,38 +2612,40 @@ function DroneSequenz() {
     className: "ds-drone"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ds-sub"
-  }, "Drone-Sequenz"), /*#__PURE__*/React.createElement("div", {
+  }, t("Drone-Sequenz")), /*#__PURE__*/React.createElement("div", {
     className: "ds-stage"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ds-now"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "Jetzt"), /*#__PURE__*/React.createElement("span", {
+  }, t("Jetzt")), /*#__PURE__*/React.createElement("span", {
     className: `ds-note ${current?.chord ? "chord" : ""}`
   }, current ? current.label : "–"), /*#__PURE__*/React.createElement("span", {
     className: "ds-pos"
-  }, notes.length ? `${index + 1} / ${notes.length}` : "keine Töne")), /*#__PURE__*/React.createElement("div", {
+  }, notes.length ? `${index + 1} / ${notes.length}` : t("keine Töne"))), /*#__PURE__*/React.createElement("div", {
     className: "ds-next"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, "N\xE4chster"), /*#__PURE__*/React.createElement("span", {
+  }, t("Nächster")), /*#__PURE__*/React.createElement("span", {
     className: "ds-note-sm"
   }, nextNote && nextNote !== current ? nextNote.label : "–"))), /*#__PURE__*/React.createElement("div", {
     className: "ds-row"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ds-btn",
     onClick: () => step(-1),
-    "aria-label": "Zur\xFCck"
+    "aria-label": t("Zurück")
   }, "\u25C0"), /*#__PURE__*/React.createElement("button", {
     className: `ds-btn ds-main ${running ? "on" : ""}`,
     onClick: toggle
-  }, running ? "■ Stopp" : "▶ Drone starten"), /*#__PURE__*/React.createElement("button", {
+  }, running ? t("■ Stopp") : t("▶ Drone starten")), /*#__PURE__*/React.createElement("button", {
     className: "ds-btn",
     onClick: () => step(1),
-    "aria-label": "Weiter"
+    "aria-label": t("Weiter")
   }, "\u25B6")), running && audioState && audioState !== "running" && /*#__PURE__*/React.createElement("p", {
     className: "ds-error"
-  }, "Der Browser blockiert den Ton (", audioState, "). Bitte Stopp und noch einmal \u201EDrone starten\u201C tippen."), /*#__PURE__*/React.createElement("div", {
+  }, t("Der Browser blockiert den Ton ({s}). Bitte Stopp und noch einmal „Drone starten“ tippen.", {
+    s: audioState
+  })), /*#__PURE__*/React.createElement("div", {
     className: "ds-chips"
   }, notes.map((n, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
@@ -2326,13 +2653,15 @@ function DroneSequenz() {
     onClick: () => setIndex(i)
   }, n.label))), /*#__PURE__*/React.createElement("label", {
     className: "ds-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Tonfolge (z. B. \u201EC G D A\u201C, Akkorde mit Bindestrich: \u201EC-E-G-B\u201C, Oktave optional: \u201EG1\u201C)"), /*#__PURE__*/React.createElement("textarea", {
+  }, /*#__PURE__*/React.createElement("span", null, t("Tonfolge (z. B. „C G D A“, Akkorde mit Bindestrich: „C-E-G-B“, Oktave optional: „G1“)")), /*#__PURE__*/React.createElement("textarea", {
     rows: 2,
     value: text,
     onChange: e => setText(e.target.value)
   })), errors.length > 0 && /*#__PURE__*/React.createElement("p", {
     className: "ds-error"
-  }, "Nicht erkannt: ", errors.join(", ")), /*#__PURE__*/React.createElement("div", {
+  }, t("Nicht erkannt: {e}", {
+    e: errors.join(", ")
+  })), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("select", {
     value: "",
@@ -2344,25 +2673,26 @@ function DroneSequenz() {
     }
   }, /*#__PURE__*/React.createElement("option", {
     value: ""
-  }, "Vorlage w\xE4hlen\u2026"), Object.entries(PRESETS).map(([k, v]) => /*#__PURE__*/React.createElement("option", {
+  }, t("Vorlage wählen…")), Object.entries(PRESETS).map(([k, v]) => /*#__PURE__*/React.createElement("option", {
     key: k,
     value: v
-  }, k)), Object.keys(saved).length > 0 && /*#__PURE__*/React.createElement("optgroup", {
-    label: "Gespeichert"
+  }, t(k))), Object.keys(saved).length > 0 && /*#__PURE__*/React.createElement("optgroup", {
+    label: t("Gespeichert")
   }, Object.entries(saved).map(([k, v]) => /*#__PURE__*/React.createElement("option", {
     key: k,
     value: v
   }, k)))), /*#__PURE__*/React.createElement("button", {
     className: "ds-btn-sm",
     onClick: saveCurrent
-  }, "Folge speichern")), /*#__PURE__*/React.createElement("div", {
+  }, t("Folge speichern"))), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
-  }, /*#__PURE__*/React.createElement("label", null, "Klang", " ", /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("label", null, t("Klang"), " ", /*#__PURE__*/React.createElement("select", {
     value: timbre,
     onChange: e => setTimbre(e.target.value)
   }, Object.keys(TIMBRES).map(k => /*#__PURE__*/React.createElement("option", {
-    key: k
-  }, k)))), /*#__PURE__*/React.createElement("label", null, "Oktave", " ", /*#__PURE__*/React.createElement("select", {
+    key: k,
+    value: k
+  }, t(k))))), /*#__PURE__*/React.createElement("label", null, t("Oktave"), " ", /*#__PURE__*/React.createElement("select", {
     value: octave,
     onChange: e => setOctave(Number(e.target.value))
   }, [1, 2, 3, 4].map(o => /*#__PURE__*/React.createElement("option", {
@@ -2372,15 +2702,15 @@ function DroneSequenz() {
     type: "checkbox",
     checked: fifth,
     onChange: e => setFifth(e.target.checked)
-  }), " Quinte (bei Einzelt\xF6nen)"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Quinte (bei Einzeltönen)")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: upperOctave,
     onChange: e => setUpperOctave(e.target.checked)
-  }), " Oktave dazu"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Oktave dazu")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: loop,
     onChange: e => setLoop(e.target.checked)
-  }), " Endlos"), /*#__PURE__*/React.createElement("label", null, "Lautst\xE4rke", " ", /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Endlos")), /*#__PURE__*/React.createElement("label", null, t("Lautstärke"), " ", /*#__PURE__*/React.createElement("input", {
     type: "range",
     min: -40,
     max: 0,
@@ -2388,6 +2718,6 @@ function DroneSequenz() {
     onChange: e => setVolume(Number(e.target.value))
   }))), /*#__PURE__*/React.createElement("p", {
     className: "ds-hint"
-  }, "Kein Ton? Lautst\xE4rke am Ger\xE4t pr\xFCfen, am iPhone den Stummschalter aus. Laptop- und Handylautsprecher geben tiefe T\xF6ne kaum wieder: Oktave 3 oder 4 w\xE4hlen oder Kopfh\xF6rer nutzen.", /*#__PURE__*/React.createElement("br", null), "Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter \xB7 zur\xFCck = Pfeil links/oben, Bild auf.", lastKey && /*#__PURE__*/React.createElement(React.Fragment, null, " Zuletzt empfangen: ", /*#__PURE__*/React.createElement("b", null, lastKey)))));
+  }, t("Kein Ton? Lautstärke am Gerät prüfen, am iPhone den Stummschalter aus. Laptop- und Handylautsprecher geben tiefe Töne kaum wieder: Oktave 3 oder 4 wählen oder Kopfhörer nutzen."), /*#__PURE__*/React.createElement("br", null), t("Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter · zurück = Pfeil links/oben, Bild auf."), lastKey && /*#__PURE__*/React.createElement(React.Fragment, null, " ", t("Zuletzt empfangen:"), " ", /*#__PURE__*/React.createElement("b", null, lastKey)))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render( /*#__PURE__*/React.createElement(DroneSequenz, null));
