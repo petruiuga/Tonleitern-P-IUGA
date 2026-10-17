@@ -2282,13 +2282,13 @@ const GROUP_SPLITS = {
 };
 
 // Untere Lagen: Ganzton 1-4, Halbton 1-2 (in 4er-Gruppen 2-4); drei Töne 1-2-4.
-// Daumenlagen: + 1 2 3; drei Töne kleine Terz + 1 2, große Terz + 1 3; zwei Töne Halbton 1-2, Ganzton 1-3.
+// Daumenlagen: jede Teilgruppe beginnt mit dem Daumen (C+ D1 E3 | F+ G1 A3): + 1 2 3; drei Töne + 1 2 oder + 1 3; zwei Töne + 1.
 function subgroupFingers(midis, thumb, groupSize) {
   const span = midis[midis.length - 1] - midis[0];
   const k = midis.length;
-  if (k === 1) return [1];
+  if (k === 1) return [thumb ? "+" : 1];
   if (thumb) {
-    if (k === 2) return span <= 1 ? [1, 2] : [1, 3];
+    if (k === 2) return ["+", 1];
     if (k === 3) return ["+", 1, midis[2] - midis[1] >= 2 ? 3 : 2];
     return ["+", 1, 2, 3, 3, 3].slice(0, k);
   }
@@ -2347,8 +2347,6 @@ function buildGroup({
     notes: [],
     up: 0
   };
-  // ab D auf der E-Saite (Lage 6) mit Daumen
-  const thumb = upSeq[0].fret >= THUMB_FROM_FRET;
   const used = split && GROUP_SPLITS[size].includes(split) ? split : GROUP_SPLITS[size][0];
   const parts = used === "auto" ? [] : used.split("+").map(Number);
   if (used === "auto") for (let st = 0; st < 4; st++) {
@@ -2358,7 +2356,7 @@ function buildGroup({
     let i = st * size;
     parts.forEach(p => {
       const sub = upSeq.slice(i, i + p);
-      subgroupFingers(sub.map(x => x.midi), thumb, size).forEach((f, j) => sub[j].finger = f);
+      subgroupFingers(sub.map(x => x.midi), sub[0].fret >= THUMB_FROM_FRET, size).forEach((f, j) => sub[j].finger = f);
       i += p;
     });
   }
