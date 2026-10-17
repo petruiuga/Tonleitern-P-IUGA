@@ -2278,7 +2278,7 @@ const GROUP_SPLITS = {
   3: ["3", "1+2", "2+1"],
   4: ["auto", "2+2", "1+3", "3+1", "4"],
   5: ["auto", "2+3", "1+4", "3+2", "4+1"],
-  6: ["3+3", "2+4", "4+2", "2+2+2"]
+  6: ["auto", "3+3", "2+4", "4+2", "2+2+2"]
 };
 
 // Untere Lagen: Ganzton 1-4, Halbton 1-2 (in 4er-Gruppen 2-4); drei Töne 1-2-4.
@@ -2298,12 +2298,12 @@ function subgroupFingers(midis, thumb, groupSize) {
 }
 
 // 4er-Gruppe automatisch (nach Petru): ab Bund 8 mit Quarte als Umfang + 1 2 3 (C+ D1 E2 F3),
-// sonst zwei Paare: Ganzton 1-4, ab Bund 10 1-3; Halbton am Anfang 1-2, am Ende der Saite 2-4
+// sonst zwei Paare: Ganzton 1-4, ab Bund 10 1-3; Halbton 1-2, unterhalb Bund 10 am Ende der Saite 2-4
 // (H1 C2 D1 E3 | F1 G4 A1 H3).
+const autoPair = (a, b, last) => b.midi - a.midi <= 1 ? last && a.fret < 10 ? [2, 4] : [1, 2] : a.fret >= 10 ? [1, 3] : [1, 4];
 function autoFour(g) {
   if (g[0].fret >= 8 && g[3].midi - g[0].midi <= 5) return ["+", 1, 2, 3];
-  const pair = (a, b, last) => b.midi - a.midi <= 1 ? last ? [2, 4] : [1, 2] : a.fret >= 10 ? [1, 3] : [1, 4];
-  return [...pair(g[0], g[1], false), ...pair(g[2], g[3], true)];
+  return [...autoPair(g[0], g[1], false), ...autoPair(g[2], g[3], true)];
 }
 
 // 5er-Gruppe automatisch: erster Ton allein, dann wie eine 4er-Gruppe; liegt diese mit Daumen,
@@ -2312,9 +2312,17 @@ function autoFive(g) {
   const rest = autoFour(g.slice(1));
   return [rest[0] === "+" ? "+" : 1, ...rest];
 }
+// 6er-Gruppe automatisch: untere Lagen drei Paare (F1 G4 A1 H4 C1 D4 | E1 F2 G1 A3 H1 C2),
+// ab Bund 10 zwei Dreiergruppen mit Daumen (D+ E1 F2 G+ A1 H3), ganz oben ab Bund 20 ohne Daumen 1 2 3 (C+ D1 E3 F1 G2 A3).
+function autoSix(g) {
+  if (g[0].fret < THUMB_FROM_FRET) return [0, 2, 4].flatMap(i => autoPair(g[i], g[i + 1], i === 4));
+  const tri = t => t[0].fret >= 20 ? [1, 2, 3] : ["+", 1, t[2].midi - t[1].midi >= 2 ? 3 : 2];
+  return [...tri(g.slice(0, 3)), ...tri(g.slice(3))];
+}
 const AUTO = {
   4: autoFour,
-  5: autoFive
+  5: autoFive,
+  6: autoSix
 };
 function buildGroup({
   rootIndex,
