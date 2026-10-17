@@ -116,6 +116,28 @@ const TR = {
   "Löschen": ["Delete", "Supprimer"],
   "Takt anhängen": ["Add a bar", "Ajouter une mesure"],
   "Letzten Takt entfernen": ["Remove last bar", "Retirer la dernière mesure"],
+  "Eine Saite · 2 Finger": ["One string · 2 fingers", "Une corde · 2 doigts"],
+  "Eine Saite · 3 Finger": ["One string · 3 fingers", "Une corde · 3 doigts"],
+  "{n}er Gruppe": ["group of {n}", "groupe de {n}"],
+  "Fingersatz": ["Fingering", "Doigté"],
+  "kleine Zahl = Finger, 0 = leere Saite": ["small number = finger, 0 = open string", "petit chiffre = doigt, 0 = corde à vide"],
+  "{up} Töne aufwärts, {down} abwärts": ["{up} notes up, {down} down", "{up} notes en montant, {down} en descendant"],
+  "Alle Lagen nacheinander": ["All positions in a row", "Toutes les positions à la suite"],
+  "Tonfolge": ["Sequence", "Suite de notes"],
+  "Akkord": ["Chord", "Accord"],
+  "Moll": ["Minor", "Mineur"],
+  "Dur 7": ["Dominant 7", "Septième de dominante"],
+  "Moll 7": ["Minor 7", "Mineur 7"],
+  "Maj 7": ["Maj 7", "Maj 7"],
+  "Quinte": ["Fifth", "Quinte"],
+  "Quarte": ["Fourth", "Quarte"],
+  "Halbton": ["Semitone", "Demi-ton"],
+  "Leeren": ["Clear", "Effacer"],
+  "Reine Stimmung (zum Grundton)": ["Just intonation (to the root)", "Intonation juste (par rapport à la fondamentale)"],
+  "Pedal verschiebt um": ["Pedal moves by", "La pédale transpose de"],
+  "rein gestimmt": ["just intonation", "intonation juste"],
+  "gleichstufig": ["equal temperament", "tempérament égal"],
+  "Ganztonschritt": ["Whole step", "Ton entier"],
   // Tonleitern / Griffbrett
   "Tonleitern über 4 Saiten": ["Scales across 4 strings", "Gammes sur 4 cordes"],
   "Lagen": ["Positions", "Positions"],
@@ -277,6 +299,28 @@ const RO = {
   "Löschen": "Șterge",
   "Takt anhängen": "Adaugă o măsură",
   "Letzten Takt entfernen": "Elimină ultima măsură",
+  "Eine Saite · 2 Finger": "O coardă · 2 degete",
+  "Eine Saite · 3 Finger": "O coardă · 3 degete",
+  "{n}er Gruppe": "grup de {n}",
+  "Fingersatz": "Digitație",
+  "kleine Zahl = Finger, 0 = leere Saite": "cifra mică = deget, 0 = coardă liberă",
+  "{up} Töne aufwärts, {down} abwärts": "{up} note în sus, {down} în jos",
+  "Alle Lagen nacheinander": "Toate pozițiile la rând",
+  "Tonfolge": "Succesiune",
+  "Akkord": "Acord",
+  "Moll": "Minor",
+  "Dur 7": "Septimă de dominantă",
+  "Moll 7": "Minor 7",
+  "Maj 7": "Maj 7",
+  "Quinte": "Cvintă",
+  "Quarte": "Cvartă",
+  "Halbton": "Semiton",
+  "Leeren": "Golește",
+  "Reine Stimmung (zum Grundton)": "Intonație naturală (față de tonică)",
+  "Pedal verschiebt um": "Pedala mută cu",
+  "rein gestimmt": "intonație naturală",
+  "gleichstufig": "temperat egal",
+  "Ganztonschritt": "Ton întreg",
   "Tonleitern über 4 Saiten": "Game pe 4 coarde",
   "Lagen": "Poziții",
   "Gruppen": "Grupuri",
@@ -485,6 +529,26 @@ try {
   document.documentElement.lang = LANG;
   document.title = t("Tonleitern & Drone");
 } catch {/* ohne Dokument */}
+
+// Gemeinsame Audio-Hilfen
+
+// iPhone/iPad: Web Audio ist bei Stummschalter stumm. Ein stilles, laufendes
+// <audio>-Element schaltet die Audio-Sitzung auf "Wiedergabe" um.
+const SILENT_WAV = "data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+let unlockAudio = null;
+function unlockIOSAudio() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+  } catch {/* nicht unterstützt */}
+  try {
+    if (!unlockAudio) {
+      unlockAudio = new Audio(SILENT_WAV);
+      unlockAudio.loop = true;
+      unlockAudio.setAttribute("playsinline", "");
+    }
+    unlockAudio.play().catch(() => {});
+  } catch {/* optional */}
+}
 
 // ─── Metronom mit vier synthetisierten Klängen ───
 // Genaues Timing über Vorausplanung im Audio-Takt (nicht über setInterval allein).
@@ -960,6 +1024,8 @@ function Metronom() {
     e.lastVoice = src;
   };
   const start = async () => {
+    // iPhone: ohne das spielt Web Audio bei Stummschalter nicht (das Mikrofon schaltet es sonst frei)
+    unlockIOSAudio();
     await Tone.start();
     const ctx = Tone.getContext().rawContext;
     const out = ctx.createGain();
@@ -1038,6 +1104,7 @@ function Metronom() {
   const preview = async name => {
     setSound(name);
     if (engineRef.current) return;
+    unlockIOSAudio();
     await Tone.start();
     const ctx = Tone.getContext().rawContext;
     const out = ctx.createGain();
@@ -1837,46 +1904,29 @@ const LAGEN = [{
   label: "7",
   fret: 12
 },
-// Obere Lagen mit Daumen in Region 3 und 4: Daumen auf G, A, H, C bzw. D, E, F (Bund der G-Saite),
-// der 1. Finger zwei Bünde darüber; gespielt wird wie ab Lage 6 über alle vier Saiten.
+// Obere Lagen (Region 3 und 4), mit Daumen, stufenweise bis zum zweiten C auf der E-Saite
 {
-  label: "R3+G",
-  fret: 14,
-  region: 3,
-  thumbFret: 12
+  label: "8",
+  fret: 13,
+  region: 3
 }, {
-  label: "R3+A",
-  fret: 16,
-  region: 3,
-  thumbFret: 14
+  label: "9",
+  fret: 15,
+  region: 3
 }, {
-  label: "R3+H",
-  fret: 18,
-  region: 3,
-  thumbFret: 16
+  label: "10",
+  fret: 17,
+  region: 3
 }, {
-  label: "R3+C",
+  label: "11",
   fret: 19,
-  region: 3,
-  thumbFret: 17
+  region: 4
 }, {
-  label: "R4+D",
-  fret: 21,
-  region: 4,
-  thumbFret: 19
-}, {
-  label: "R4+E",
-  fret: 23,
-  region: 4,
-  thumbFret: 21
-}, {
-  label: "R4+F",
-  fret: 24,
-  region: 4,
-  thumbFret: 22
+  label: "12",
+  fret: 20,
+  region: 4
 }];
-// Name einer Lage für die Anzeige (obere Lagen: Daumen-Ton auf der G-Saite)
-const lageName = l => l.region ? `+${nn(SHARP_NAMES[(43 + l.thumbFret) % 12])}` : l.label;
+const lageName = l => l.label;
 const THUMB_FROM_FRET = 10; // ab Lage 6 (D auf der E-Saite) mit Daumen
 
 // Klingende Tonhöhe der leeren Saiten (MIDI): E1, A1, D2, G2
@@ -2220,13 +2270,37 @@ function buildRun({
   };
 }
 
-// Gruppen: 3, 4, 5 oder 6 Leitertöne auf jeder Saite, von Stufe zu Stufe höher
+// Gruppen: 3, 4, 5 oder 6 Leitertöne auf jeder Saite, von Stufe zu Stufe höher.
+// Fingersatz je Saite in Teilgruppen (z. B. 4er = 2+2, 1+3, 3+1); jede Teilgruppe ist eine Handstellung.
+const GROUP_SPLITS = {
+  3: ["3", "1+2", "2+1"],
+  4: ["2+2", "1+3", "3+1", "4"],
+  5: ["2+3", "1+4", "3+2", "4+1"],
+  6: ["3+3", "2+4", "4+2", "2+2+2"]
+};
+
+// Untere Lagen: Ganzton 1-4, Halbton 1-2; drei Töne 1-2-4.
+// Daumenlagen: + 1 2 3; drei Töne kleine Terz + 1 2, große Terz + 1 3; zwei Töne Halbton 1-2, Ganzton 1-3.
+function subgroupFingers(midis, thumb) {
+  const span = midis[midis.length - 1] - midis[0];
+  const k = midis.length;
+  if (k === 1) return [1];
+  if (thumb) {
+    if (k === 2) return span <= 1 ? [1, 2] : [1, 3];
+    if (k === 3) return ["+", 1, span <= 3 ? 2 : 3];
+    return ["+", 1, 2, 3, 3, 3].slice(0, k);
+  }
+  if (k === 2) return span <= 1 ? [1, 2] : [1, 4];
+  if (k === 3) return [1, 2, 4];
+  return [1, 2, 3, 4, 4, 4].slice(0, k);
+}
 function buildGroup({
   rootIndex,
   scale,
   lageFret,
   size,
-  stage
+  stage,
+  split
 }) {
   const ctx = scaleContext(rootIndex, scale);
   const startFret = startFretFor(lageFret, ctx.inScale);
@@ -2251,7 +2325,27 @@ function buildGroup({
     notes: [],
     up: 0
   };
-  const downSeq = [...upSeq].reverse().slice(1).map(x => lowerForDescent(x, ctx.downShift(x.midi)));
+  // ab D auf der E-Saite (Lage 6) mit Daumen
+  const thumb = upSeq[0].fret >= THUMB_FROM_FRET;
+  const parts = (split && GROUP_SPLITS[size].includes(split) ? split : GROUP_SPLITS[size][0]).split("+").map(Number);
+  for (let st = 0; st < 4; st++) {
+    let i = st * size;
+    parts.forEach(p => {
+      const sub = upSeq.slice(i, i + p);
+      subgroupFingers(sub.map(x => x.midi), thumb).forEach((f, j) => sub[j].finger = f);
+      i += p;
+    });
+  }
+  upSeq.forEach(x => x.fret === 0 && (x.finger = 0));
+  const fingerAt = {};
+  upSeq.forEach(x => fingerAt[x.midi] = x.finger);
+  const downSeq = [...upSeq].reverse().slice(1).map(x => {
+    const n = lowerForDescent(x, ctx.downShift(x.midi));
+    return {
+      ...n,
+      finger: fingerAt[n.midi] ?? x.finger
+    };
+  });
   return finish(upSeq, downSeq, ctx, lageFret, false);
 }
 
@@ -2267,6 +2361,141 @@ function stageNames(rootIndex, scale, lageFret, count) {
     midi = nextInScale(midi, ctx.inScale);
   }
   return out;
+}
+
+// ─── Tonleitern auf einer Saite ───
+// Startton einer Saite: leere Saite, wenn sie zur Tonleiter gehört, sonst der nächste Leiterton darüber
+function firstOnString(open, ctx, minFret = 0) {
+  let m = open + minFret;
+  while (!ctx.inScale(m)) m++;
+  return m;
+}
+function oneStringStages(rootIndex, scale, string, kind) {
+  const ctx = scaleContext(rootIndex, scale);
+  const open = STRINGS[string].midi;
+  // 2 Finger: ab der leeren Saite bis zur Oktave; 3 Finger (6er): ab D bis E, (9er): ab D bis D auf der G-Saite
+  const count = kind === "2" ? 8 : kind === "6" ? 9 : 8;
+  let m = firstOnString(open, ctx, kind === "2" ? 0 : 7);
+  const out = [];
+  for (let k = 0; k < count; k++) {
+    out.push({
+      midi: m,
+      name: ctx.name(m, false)
+    });
+    m = nextInScale(m, ctx.inScale);
+  }
+  return out;
+}
+function descendOnString(x, ctx) {
+  const shift = ctx.downShift(x.midi);
+  return shift && x.fret + shift >= 0 ? {
+    ...x,
+    midi: x.midi + shift,
+    fret: x.fret + shift
+  } : {
+    ...x
+  };
+}
+
+// Mit zwei Fingern: je zwei Töne eine Handstellung. Unter der Oktave Ganzton 1-4, Halbton 2-4,
+// ab der Oktave (12. Bund) Ganzton 1-3, Halbton 2-3. 11 Töne aufwärts, letzte zwei wiederholt, und zurück.
+function buildTwoFinger({
+  rootIndex,
+  scale,
+  string,
+  stage
+}) {
+  const ctx = scaleContext(rootIndex, scale);
+  const open = STRINGS[string].midi;
+  const st = oneStringStages(rootIndex, scale, string, "2")[stage];
+  if (!st) return {
+    notes: [],
+    up: 0
+  };
+  const asc = [];
+  let m = st.midi;
+  for (let k = 0; k < 11; k++) {
+    asc.push({
+      string,
+      fret: m - open,
+      midi: m
+    });
+    m = nextInScale(m, ctx.inScale);
+  }
+  let i = 0;
+  if (asc[0].fret === 0) {
+    asc[0].finger = 0;
+    i = 1;
+  }
+  for (; i < asc.length; i += 2) {
+    const a = asc[i];
+    const b = asc[i + 1];
+    const high = a.fret >= 12;
+    if (!b) {
+      a.finger = 1;
+      break;
+    }
+    const half = b.midi - a.midi <= 1;
+    a.finger = half ? 2 : 1;
+    b.finger = high ? 3 : 4;
+  }
+  const n = asc.length;
+  const fingerAt = {};
+  asc.forEach(x => fingerAt[x.midi] = x.finger);
+  const desc = [...asc].reverse().map(x => {
+    const d = descendOnString(x, ctx);
+    return {
+      ...d,
+      finger: fingerAt[d.midi] ?? x.finger
+    };
+  });
+  const upSeq = [...asc, asc[n - 2]].map(x => ({
+    ...x
+  }));
+  const downSeq = [...desc, desc[n - 2]];
+  return finish(upSeq, downSeq, ctx, 0, false);
+}
+
+// Mit drei Fingern und Daumen: Dreiergruppen, kleine Terz + 1 2, große Terz + 1 3. 6er oder 9er Gruppe, und zurück.
+function buildThreeFinger({
+  rootIndex,
+  scale,
+  string,
+  stage,
+  size
+}) {
+  const ctx = scaleContext(rootIndex, scale);
+  const open = STRINGS[string].midi;
+  const st = oneStringStages(rootIndex, scale, string, String(size))[stage];
+  if (!st) return {
+    notes: [],
+    up: 0
+  };
+  const upSeq = [];
+  let m = st.midi;
+  for (let k = 0; k < size; k++) {
+    upSeq.push({
+      string,
+      fret: m - open,
+      midi: m
+    });
+    m = nextInScale(m, ctx.inScale);
+  }
+  for (let i = 0; i < size; i += 3) {
+    const tri = upSeq.slice(i, i + 3);
+    const span = tri[tri.length - 1].midi - tri[0].midi;
+    ["+", 1, span <= 3 ? 2 : 3].forEach((f, j) => tri[j] && (tri[j].finger = f));
+  }
+  const fingerAt = {};
+  upSeq.forEach(x => fingerAt[x.midi] = x.finger);
+  const downSeq = [...upSeq].reverse().slice(1).map(x => {
+    const d = descendOnString(x, ctx);
+    return {
+      ...d,
+      finger: fingerAt[d.midi] ?? x.finger
+    };
+  });
+  return finish(upSeq, downSeq, ctx, 0, false);
 }
 
 // ─── Griffbrett-Darstellung ───
@@ -2328,7 +2557,7 @@ function Fingerboard({
     height: 164,
     fill: "var(--brass)",
     opacity: "0.16"
-  }), LAGEN.filter(l => l.fret <= maxF && (!l.region || l.fret === lageFret)).map(l => /*#__PURE__*/React.createElement("g", {
+  }), LAGEN.filter(l => l.fret <= maxF).map(l => /*#__PURE__*/React.createElement("g", {
     key: l.label
   }, /*#__PURE__*/React.createElement("line", {
     x1: fretX(l.fret - 1),
@@ -2712,7 +2941,10 @@ function GriffbrettTonleiter({
   const [lage, setLage] = useState(0);
   const [openStrings, setOpenStrings] = useState(true);
   const [groupSize, setGroupSize] = useState(3);
+  const [splits, setSplits] = useState({});
   const [stage, setStage] = useState(0);
+  const [oneString, setOneString] = useState(3);
+  const [threeSize, setThreeSize] = useState(6);
   const [allStages, setAllStages] = useState(false);
   const [bpm, setBpm] = useState(72);
   const [notated, setNotated] = useState(true);
@@ -2722,22 +2954,46 @@ function GriffbrettTonleiter({
   const timerRef = useRef(null);
   const lageFret = LAGEN[lage].fret;
   const wrapRef = useRef(null);
-  const stages = useMemo(() => stageNames(rootIndex, scale, lageFret, 11), [rootIndex, scale, lageFret]);
-  const run = useMemo(() => {
+  const single = mode === "saite2" || mode === "saite3";
+
+  // Stufen (Starttöne) je Art
+  const stages = useMemo(() => {
+    if (mode === "saite2") return oneStringStages(rootIndex, scale, oneString, "2").map(x => x.name);
+    if (mode === "saite3") return oneStringStages(rootIndex, scale, oneString, String(threeSize)).map(x => x.name);
+    return stageNames(rootIndex, scale, lageFret, 11);
+  }, [mode, rootIndex, scale, lageFret, oneString, threeSize]);
+  const buildFor = k => {
     if (mode === "gruppen") return buildGroup({
       rootIndex,
       scale,
       lageFret,
       size: groupSize,
-      stage
+      stage: k,
+      split: splits[groupSize]
+    });
+    if (mode === "saite2") return buildTwoFinger({
+      rootIndex,
+      scale,
+      string: oneString,
+      stage: k
+    });
+    if (mode === "saite3") return buildThreeFinger({
+      rootIndex,
+      scale,
+      string: oneString,
+      stage: k,
+      size: threeSize
     });
     return buildRun({
       rootIndex,
       scale,
-      lageFret,
+      lageFret: LAGEN[k].fret,
       openStrings
     });
-  }, [mode, rootIndex, scale, lageFret, openStrings, groupSize, stage]);
+  };
+  const run = useMemo(() => buildFor(mode === "lage" ? lage : stage),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [mode, rootIndex, scale, lage, openStrings, groupSize, stage, splits, oneString, threeSize]);
   const {
     notes,
     up
@@ -2771,32 +3027,28 @@ function GriffbrettTonleiter({
   };
   useEffect(() => {
     if (!playing) setCurrent(-1);
-  }, [mode, rootIndex, scale, lage, openStrings, groupSize]);
+  }, [mode, rootIndex, scale, lage, openStrings, groupSize, oneString, threeSize]);
   useEffect(() => () => clearTimeout(timerRef.current), []);
   const play = async () => {
     if (playing) return stop();
+    unlockIOSAudio();
     await Tone.start();
     setPlaying(true);
     const beat = 60 / bpm;
-    // Gruppen „alle Stufen“: Stufe für Stufe nacheinander
-    const plan = mode === "gruppen" && allStages ? stages.map((_, k) => ({
+    // „alle Stufen“: Lage für Lage bzw. Stufe für Stufe nacheinander
+    const keys = mode === "lage" ? LAGEN.map((_, k) => k).slice(lage) : stages.map((_, k) => k).slice(stage);
+    const plan = allStages ? keys.map(k => ({
       k,
-      run: buildGroup({
-        rootIndex,
-        scale,
-        lageFret,
-        size: groupSize,
-        stage: k
-      })
+      run: buildFor(k)
     })).filter(p => p.run.notes.length) : [{
-      k: stage,
+      k: mode === "lage" ? lage : stage,
       run
     }];
     const stepPlay = (p, i) => {
       if (p >= plan.length) return stop();
       const seq = plan[p].run.notes;
       if (i >= seq.length) return stepPlay(p + 1, 0);
-      if (i === 0 && mode === "gruppen") setStage(plan[p].k);
+      if (i === 0 && allStages) (mode === "lage" ? setLage : setStage)(plan[p].k);
       setCurrent(i);
       synthRef.current?.triggerAttackRelease(freqOf(seq[i].midi), beat * 0.9);
       timerRef.current = setTimeout(() => stepPlay(p, i + 1), beat * 1000);
@@ -2805,6 +3057,7 @@ function GriffbrettTonleiter({
     document.activeElement?.blur?.();
   };
   const playMidi = async midi => {
+    unlockIOSAudio();
     await Tone.start();
     synthRef.current?.triggerAttackRelease(freqOf(midi), 1.2);
   };
@@ -2824,18 +3077,32 @@ function GriffbrettTonleiter({
       left: wrap.scrollLeft + r.left - w.left - (w.width - r.width) / 2,
       behavior: "smooth"
     });
-  }, [lage, mode, rootIndex, scale]);
+  }, [lage, mode, rootIndex, scale, stage, oneString, threeSize]);
   const dronePc = dronePcs?.[0];
   const droneRootIndex = dronePc == null ? -1 : ROOTS.findIndex(r => r.pc === dronePc);
-  const thumb = lageFret >= THUMB_FROM_FRET;
+  const hasThumb = notes.some(n => n.finger === "+");
+  const region = LAGEN[lage].region;
+  const TABS = [["lage", "Lagen"], ["gruppen", "Gruppen"], ["saite2", "Eine Saite · 2 Finger"], ["saite3", "Eine Saite · 3 Finger"], ["regionen", "Regionen"]];
+  const legend = t("kleine Zahl = Finger, 0 = leere Saite") + (hasThumb ? t(", + = Daumen (blauer Rand)") : "");
+  let info;
+  if (mode === "lage") info = t("{up} Töne aufwärts, {down} abwärts", {
+    up,
+    down: notes.length - up
+  }) + (region ? ` · ${t("Region")} ${region}` : "");else if (mode === "gruppen") info = t("{g} Töne pro Saite, {up} aufwärts und zurück", {
+    g: groupSize,
+    up
+  });else info = t("{up} Töne aufwärts, {down} abwärts", {
+    up,
+    down: notes.length - up
+  });
   return /*#__PURE__*/React.createElement("div", {
     className: "gt"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ds-sub"
-  }, t("Tonleitern über 4 Saiten")), /*#__PURE__*/React.createElement("div", {
+  }, t("Tonleitern")), /*#__PURE__*/React.createElement("div", {
     className: "gt-tabs",
     role: "tablist"
-  }, [["lage", "Lagen"], ["gruppen", "Gruppen"], ["regionen", "Regionen"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+  }, TABS.map(([k, l]) => /*#__PURE__*/React.createElement("button", {
     key: k,
     role: "tab",
     "aria-selected": mode === k,
@@ -2843,6 +3110,7 @@ function GriffbrettTonleiter({
     onClick: () => {
       stop();
       setMode(k);
+      setStage(0);
     }
   }, t(l)))), mode === "regionen" ? /*#__PURE__*/React.createElement(Regionen, {
     onPlay: playMidi
@@ -2865,31 +3133,44 @@ function GriffbrettTonleiter({
     onClick: () => setRootIndex(droneRootIndex)
   }, t("Grundton = Drone ({n})", {
     n: nn(ROOTS[droneRootIndex].name)
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), !single && /*#__PURE__*/React.createElement("div", {
     className: "gt-lagen"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, t("Lage")), LAGEN.map((l, i) => !l.region && /*#__PURE__*/React.createElement("button", {
+  }, t("Lage")), LAGEN.map((l, i) => /*#__PURE__*/React.createElement("button", {
     key: l.label,
-    className: `ds-chip ${i === lage ? "active" : ""} ${l.half ? "half" : ""}`,
+    className: `ds-chip ${i === lage ? "active" : ""} ${l.half ? "half" : ""} ${l.fret >= THUMB_FROM_FRET ? "thumb" : ""}`,
     onClick: () => {
       setLage(i);
       setStage(0);
     }
-  }, l.label))), /*#__PURE__*/React.createElement("div", {
-    className: "gt-lagen"
-  }, [3, 4].map(r => /*#__PURE__*/React.createElement(React.Fragment, {
-    key: r
+  }, l.label))), single && /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, t("Region"), " ", r), LAGEN.map((l, i) => l.region === r && /*#__PURE__*/React.createElement("button", {
-    key: l.label,
-    className: `ds-chip thumb ${i === lage ? "active" : ""}`,
+  }, t("Saite")), STRINGS.map((s, i) => /*#__PURE__*/React.createElement("button", {
+    key: s.name,
+    className: `ds-chip ${i === oneString ? "active" : ""}`,
     onClick: () => {
-      setLage(i);
+      setOneString(i);
       setStage(0);
     }
-  }, lageName(l)))))), mode === "gruppen" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, t("{s}-Saite", {
+    s: nn(s.name)
+  })))), mode === "saite3" && /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Gruppe")), [6, 9].map(g => /*#__PURE__*/React.createElement("button", {
+    key: g,
+    className: `ds-chip ${g === threeSize ? "active" : ""}`,
+    onClick: () => {
+      setThreeSize(g);
+      setStage(0);
+    }
+  }, t("{n}er Gruppe", {
+    n: g
+  })))), mode === "gruppen" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
@@ -2900,6 +3181,17 @@ function GriffbrettTonleiter({
   }, t("{g}er", {
     g
   })))), /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Fingersatz")), GROUP_SPLITS[groupSize].map(sp => /*#__PURE__*/React.createElement("button", {
+    key: sp,
+    className: `ds-chip ${sp === (splits[groupSize] || GROUP_SPLITS[groupSize][0]) ? "active" : ""}`,
+    onClick: () => setSplits(x => ({
+      ...x,
+      [groupSize]: sp
+    }))
+  }, sp)))), mode !== "lage" && /*#__PURE__*/React.createElement("div", {
     className: "gt-lagen"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
@@ -2907,13 +3199,13 @@ function GriffbrettTonleiter({
     key: k,
     className: `ds-chip ${k === stage ? "active" : ""}`,
     onClick: () => setStage(k)
-  }, nm)))), /*#__PURE__*/React.createElement("div", {
+  }, nm))), /*#__PURE__*/React.createElement("div", {
     className: "fb-wrap",
     ref: wrapRef
   }, /*#__PURE__*/React.createElement(Fingerboard, {
     notes: notes,
     current: current,
-    lageFret: lageFret,
+    lageFret: single ? 0 : lageFret,
     dronePcs: dronePcs,
     onNote: playNote,
     showWindow: mode === "lage"
@@ -2929,13 +3221,7 @@ function GriffbrettTonleiter({
     style: {
       marginTop: 4
     }
-  }, mode === "lage" ? t("{up} Töne aufwärts, {down} abwärts · kleine Zahl = Finger, 0 = leere Saite", {
-    up,
-    down: notes.length - up
-  }) + (thumb ? t(", + = Daumen (blauer Rand)") : "") : t("{g} Töne pro Saite, {up} aufwärts und zurück", {
-    g: groupSize,
-    up
-  }), dronePcs && t(" · grüner Ring = aktueller Drone-Ton")), /*#__PURE__*/React.createElement("div", {
+  }, info, " \xB7 ", legend, dronePcs && t(" · grüner Ring = aktueller Drone-Ton")), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     className: `ds-btn-sm ${playing ? "on" : ""}`,
@@ -2950,11 +3236,11 @@ function GriffbrettTonleiter({
     type: "checkbox",
     checked: openStrings,
     onChange: e => setOpenStrings(e.target.checked)
-  }), " ", t("Leersaiten beim Saitenwechsel")), mode === "gruppen" && /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  }), " ", t("Leersaiten beim Saitenwechsel")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: allStages,
     onChange: e => setAllStages(e.target.checked)
-  }), " ", t("Alle Stufen nacheinander")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  }), " ", mode === "lage" ? t("Alle Lagen nacheinander") : t("Alle Stufen nacheinander")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: notated,
     onChange: e => setNotated(e.target.checked)
@@ -3074,22 +3360,80 @@ async function save(data) {
   }
 }
 
-// iPhone/iPad: Web Audio ist bei Stummschalter stumm. Ein stilles, laufendes
-// <audio>-Element schaltet die Audio-Sitzung auf "Wiedergabe" um.
-const SILENT_WAV = "data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
-let unlockAudio = null;
-function unlockIOSAudio() {
-  try {
-    if (navigator.audioSession) navigator.audioSession.type = "playback";
-  } catch {/* nicht unterstützt */}
-  try {
-    if (!unlockAudio) {
-      unlockAudio = new Audio(SILENT_WAV);
-      unlockAudio.loop = true;
-      unlockAudio.setAttribute("playsinline", "");
-    }
-    unlockAudio.play().catch(() => {});
-  } catch {/* optional */}
+// ─── Quintenzirkel: mehrere Töne gleichzeitig als Akkord halten ───
+const CIRCLE = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
+const PC_NAMES = ["C", "Des", "D", "Es", "E", "F", "Fis", "G", "As", "A", "B", "H"];
+// Reine Stimmung zum Grundton (Frequenzverhältnis je Intervall in Halbtönen)
+const JUST = [1, 16 / 15, 9 / 8, 6 / 5, 5 / 4, 4 / 3, 45 / 32, 3 / 2, 8 / 5, 5 / 3, 9 / 5, 15 / 8];
+const justCents = iv => Math.round(1200 * Math.log2(JUST[iv]) - 100 * iv);
+const CHORDS = {
+  "Dur": [0, 4, 7],
+  "Moll": [0, 3, 7],
+  "Dur 7": [0, 4, 7, 10],
+  "Moll 7": [0, 3, 7, 10],
+  "Maj 7": [0, 4, 7, 11],
+  "Quinte": [0, 7]
+};
+function CircleOfFifths({
+  pcs,
+  root,
+  onToggle
+}) {
+  const R = 120;
+  const c = 150;
+  return /*#__PURE__*/React.createElement("svg", {
+    className: "cf",
+    viewBox: "0 0 300 300",
+    role: "group",
+    "aria-label": t("Quintenzirkel")
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: c,
+    cy: c,
+    r: R + 26,
+    fill: "none",
+    stroke: "var(--line)"
+  }), CIRCLE.map((pc, i) => {
+    const a = i / 12 * 2 * Math.PI - Math.PI / 2;
+    const x = c + R * Math.cos(a);
+    const y = c + R * Math.sin(a);
+    const on = pcs.includes(pc);
+    const isRoot = pc === root && on;
+    return /*#__PURE__*/React.createElement("g", {
+      key: pc,
+      className: "cf-note",
+      onClick: () => onToggle(pc),
+      style: {
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: x,
+      cy: y,
+      r: 24,
+      fill: on ? "var(--brass)" : "var(--panel)",
+      stroke: isRoot ? "var(--ok)" : "var(--brass)",
+      strokeWidth: isRoot ? 4 : 1.5
+    }), /*#__PURE__*/React.createElement("text", {
+      x: x,
+      y: y + 5,
+      textAnchor: "middle",
+      fontSize: "15",
+      fontWeight: "700",
+      fill: on ? "#1c1712" : "var(--text)"
+    }, nn(PC_NAMES[pc])));
+  }), /*#__PURE__*/React.createElement("text", {
+    x: c,
+    y: c - 4,
+    textAnchor: "middle",
+    fontSize: "13",
+    fill: "var(--muted)"
+  }, t("Grundton")), /*#__PURE__*/React.createElement("text", {
+    x: c,
+    y: c + 22,
+    textAnchor: "middle",
+    fontSize: "26",
+    fontWeight: "700",
+    fill: "var(--ok)"
+  }, pcs.length ? nn(PC_NAMES[root]) : "–"));
 }
 
 // Bildschirm beim Üben nicht abdunkeln (Screen Wake Lock, nach dem ersten Antippen;
@@ -3129,6 +3473,11 @@ function DroneSequenz() {
   const [lastKey, setLastKey] = useState("");
   const [saved, setSaved] = useState({});
   const [a4, setA4] = useState(440);
+  const [droneMode, setDroneMode] = useState("folge");
+  const [circlePcs, setCirclePcs] = useState([0, 4, 7]);
+  const [circleRoot, setCircleRoot] = useState(0);
+  const [just, setJust] = useState(true);
+  const [pedalStep, setPedalStep] = useState(7);
   const synthRef = useRef(null);
   const chainRef = useRef(null);
   const soundingRef = useRef([]);
@@ -3136,8 +3485,30 @@ function DroneSequenz() {
     notes,
     errors
   } = parseSequence(text);
-  const current = notes[Math.min(index, notes.length - 1)];
-  const nextNote = notes.length ? notes[index + 1 < notes.length ? index + 1 : loop ? 0 : index] : null;
+  // Quintenzirkel-Akkord: Töne aufwärts ab dem Grundton, wahlweise rein gestimmt
+  const circleStep = (() => {
+    if (!circlePcs.length) return null;
+    const ivs = [...new Set(circlePcs.map(pc => (pc - circleRoot + 12) % 12))].sort((a, b) => a - b);
+    return {
+      label: ivs.map(iv => noteLabel(parseNote(PC_NAMES[(circleRoot + iv) % 12], "de"))).join("–"),
+      pc: circleRoot,
+      octave: null,
+      tones: ivs.map(iv => ({
+        pc: (circleRoot + iv) % 12
+      })),
+      chord: ivs.length > 1,
+      ivs
+    };
+  })();
+  const inCircle = droneMode === "zirkel";
+  const current = inCircle ? circleStep : notes[Math.min(index, notes.length - 1)];
+  const nextNote = inCircle ? null : notes.length ? notes[index + 1 < notes.length ? index + 1 : loop ? 0 : index] : null;
+  const toggleCircle = pc => {
+    const next = circlePcs.includes(pc) ? circlePcs.filter(x => x !== pc) : [...circlePcs, pc];
+    setCirclePcs(next);
+    if (next.length && (!circlePcs.length || !next.includes(circleRoot))) setCircleRoot(next[0]);
+  };
+  const applyChord = ivs => setCirclePcs(ivs.map(iv => (circleRoot + iv) % 12));
 
   // Gespeicherte Folgen laden
   useEffect(() => {
@@ -3213,7 +3584,12 @@ function DroneSequenz() {
     const root = 12 * ((current.octave ?? octave) + 1) + current.pc;
     const f0 = midiToFreq(root, a4);
     let freqs;
-    if (current.chord) {
+    if (current.ivs) {
+      // Quintenzirkel: rein (Verhältnisse zum Grundton) oder gleichstufig
+      freqs = current.ivs.map(iv => just ? f0 * JUST[iv] : midiToFreq(root + iv, a4));
+      if (current.ivs.length === 1 && fifth) freqs.push(f0 * 1.5);
+      if (upperOctave) freqs.push(f0 * 2);
+    } else if (current.chord) {
       // Akkordtöne aufwärts geschichtet ab dem ersten Ton
       let prev = root;
       freqs = [f0];
@@ -3232,7 +3608,7 @@ function DroneSequenz() {
     const vel = Math.max(0.3, 0.6 / Math.sqrt(freqs.length / 2));
     synth.triggerAttack(freqs, undefined, vel);
     soundingRef.current = freqs;
-  }, [running, current?.label, current?.octave, index, octave, fifth, upperOctave, timbre, a4]);
+  }, [running, current?.label, current?.octave, index, octave, fifth, upperOctave, timbre, a4, just, droneMode]);
 
   // Stimmton zum gewählten Kammerton: kurz oder gehalten (erneut tippen = aus)
   const [refMidi, setRefMidi] = useState(null);
@@ -3268,6 +3644,13 @@ function DroneSequenz() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [a4]);
   const step = useCallback(dir => {
+    // Quintenzirkel: Pedal verschiebt den ganzen Akkord (Quinte oder Halbton)
+    if (inCircle) {
+      const d = (dir * pedalStep + 12) % 12;
+      setCirclePcs(list => list.map(pc => (pc + d) % 12));
+      setCircleRoot(r => (r + d) % 12);
+      return;
+    }
     setIndex(i => {
       const n = notes.length;
       if (!n) return 0;
@@ -3276,7 +3659,7 @@ function DroneSequenz() {
       if (j < 0) return loop ? n - 1 : 0;
       return j;
     });
-  }, [notes.length, loop]);
+  }, [notes.length, loop, inCircle, pedalStep]);
 
   // Pedal / Tastatur
   useEffect(() => {
@@ -3364,6 +3747,15 @@ function DroneSequenz() {
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ds-sub"
   }, t("Drone-Sequenz")), /*#__PURE__*/React.createElement("div", {
+    className: "gt-tabs",
+    role: "tablist"
+  }, [["folge", "Tonfolge"], ["zirkel", "Quintenzirkel"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    role: "tab",
+    "aria-selected": droneMode === k,
+    className: `gt-tab ${droneMode === k ? "active" : ""}`,
+    onClick: () => setDroneMode(k)
+  }, t(l)))), /*#__PURE__*/React.createElement("div", {
     className: "ds-stage"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ds-now"
@@ -3373,7 +3765,7 @@ function DroneSequenz() {
     className: `ds-note ${current?.chord ? "chord" : ""}`
   }, current ? current.label : "–"), /*#__PURE__*/React.createElement("span", {
     className: "ds-pos"
-  }, notes.length ? `${index + 1} / ${notes.length}` : t("keine Töne"))), /*#__PURE__*/React.createElement("div", {
+  }, inCircle ? just ? t("rein gestimmt") : t("gleichstufig") : notes.length ? `${index + 1} / ${notes.length}` : t("keine Töne"))), /*#__PURE__*/React.createElement("div", {
     className: "ds-next"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
@@ -3396,7 +3788,54 @@ function DroneSequenz() {
     className: "ds-error"
   }, t("Der Browser blockiert den Ton ({s}). Bitte Stopp und noch einmal „Drone starten“ tippen.", {
     s: audioState
-  })), /*#__PURE__*/React.createElement("div", {
+  })), inCircle && /*#__PURE__*/React.createElement("div", {
+    className: "cf-wrap"
+  }, /*#__PURE__*/React.createElement(CircleOfFifths, {
+    pcs: circlePcs,
+    root: circleRoot,
+    onToggle: toggleCircle
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cf-side"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Grundton")), CIRCLE.filter(pc => circlePcs.includes(pc)).map(pc => /*#__PURE__*/React.createElement("button", {
+    key: pc,
+    className: `ds-chip ${pc === circleRoot ? "active" : ""}`,
+    onClick: () => setCircleRoot(pc)
+  }, nn(PC_NAMES[pc])))), /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Akkord")), Object.entries(CHORDS).map(([k, ivs]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    className: "ds-chip",
+    onClick: () => applyChord(ivs)
+  }, t(k))), /*#__PURE__*/React.createElement("button", {
+    className: "ds-chip",
+    onClick: () => setCirclePcs([])
+  }, t("Leeren"))), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: just,
+    onChange: e => setJust(e.target.checked)
+  }), " ", t("Reine Stimmung (zum Grundton)")), just && circleStep && circleStep.ivs.length > 1 && /*#__PURE__*/React.createElement("p", {
+    className: "ds-hint cf-cents"
+  }, circleStep.ivs.slice(1).map(iv => {
+    const c = justCents(iv);
+    return `${nn(PC_NAMES[(circleRoot + iv) % 12])} ${c > 0 ? "+" : ""}${c} ${t("Cent")}`;
+  }).join(" · ")), /*#__PURE__*/React.createElement("label", null, t("Pedal verschiebt um"), " ", /*#__PURE__*/React.createElement("select", {
+    value: pedalStep,
+    onChange: e => setPedalStep(Number(e.target.value))
+  }, /*#__PURE__*/React.createElement("option", {
+    value: 7
+  }, t("Quinte")), /*#__PURE__*/React.createElement("option", {
+    value: 5
+  }, t("Quarte")), /*#__PURE__*/React.createElement("option", {
+    value: 1
+  }, t("Halbton")), /*#__PURE__*/React.createElement("option", {
+    value: 2
+  }, t("Ganztonschritt")))))), !inCircle && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "ds-chips"
   }, notes.map((n, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
@@ -3435,7 +3874,7 @@ function DroneSequenz() {
   }, k)))), /*#__PURE__*/React.createElement("button", {
     className: "ds-btn-sm",
     onClick: saveCurrent
-  }, t("Folge speichern"))), /*#__PURE__*/React.createElement("div", {
+  }, t("Folge speichern")))), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("label", null, t("Klang"), " ", /*#__PURE__*/React.createElement("select", {
     value: timbre,
@@ -3469,6 +3908,8 @@ function DroneSequenz() {
     onChange: e => setVolume(Number(e.target.value))
   }))), /*#__PURE__*/React.createElement("p", {
     className: "ds-hint"
-  }, t("Kein Ton? Lautstärke am Gerät prüfen, am iPhone den Stummschalter aus. Laptop- und Handylautsprecher geben tiefe Töne kaum wieder: Oktave 3 oder 4 wählen oder Kopfhörer nutzen."), /*#__PURE__*/React.createElement("br", null), t("Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter · zurück = Pfeil links/oben, Bild auf."), lastKey && /*#__PURE__*/React.createElement(React.Fragment, null, " ", t("Zuletzt empfangen:"), " ", /*#__PURE__*/React.createElement("b", null, lastKey)))));
+  }, t("Kein Ton? Lautstärke am Gerät prüfen, am iPhone den Stummschalter aus. Laptop- und Handylautsprecher geben tiefe Töne kaum wieder: Oktave 3 oder 4 wählen oder Kopfhörer nutzen."), /*#__PURE__*/React.createElement("br", null), t("Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter · zurück = Pfeil links/oben, Bild auf."), lastKey && /*#__PURE__*/React.createElement(React.Fragment, null, " ", t("Zuletzt empfangen:"), " ", /*#__PURE__*/React.createElement("b", null, lastKey)))), /*#__PURE__*/React.createElement("footer", {
+    className: "ds-footer"
+  }, "Copyright \xA9 Petru IUGA"));
 }
 ReactDOM.createRoot(document.getElementById("root")).render( /*#__PURE__*/React.createElement(DroneSequenz, null));

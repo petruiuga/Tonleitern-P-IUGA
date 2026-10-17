@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tonleitern & Drone</title>
-<meta name="theme-color" content="#8b5a2b">
+<meta name="theme-color" content="#1c1712">
+<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tonleitern">
@@ -43,6 +44,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-a
 textarea{width:100%;font:inherit;font-size:1.05rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
 .ds-error{color:var(--err);margin:4px 0}
 .ds-hint{font-size:.85rem;color:var(--muted);margin-top:18px}
+.ds-footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);text-align:center;font-size:.85rem;color:var(--muted)}
 .gt{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
 .gt-lagen{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
 .gt-lagen .ds-label{margin-right:4px}
@@ -106,6 +108,10 @@ section{scroll-margin-top:56px}
 .mt-word b{min-width:2.5ch}.mt-word .ds-chip{min-width:0;padding:2px 8px}
 .mt-word.has{border-color:var(--ok)}.mt-word.rec{border-color:var(--tu-high);background:color-mix(in srgb,var(--tu-high) 12%,transparent)}
 .ds-chip.thumb{border-color:var(--fb-blue)}
+.cf-wrap{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin:8px 0}
+.cf{width:min(300px,100%);height:auto;flex:0 0 auto}
+.cf-side{flex:1 1 240px;display:flex;flex-direction:column;gap:8px}
+.cf-cents{margin:0}
 .mt-meter input[type=text]{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
 .tu-trace{display:block;width:100%;height:56px;margin-top:4px;border-radius:8px;background:var(--bg)}
 .ds-btn-sm.rec{background:#c0392b;border-color:#c0392b;color:#fff}
