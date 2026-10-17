@@ -2277,7 +2277,7 @@ function buildRun({
 const GROUP_SPLITS = {
   3: ["3", "1+2", "2+1"],
   4: ["auto", "2+2", "1+3", "3+1", "4"],
-  5: ["2+3", "1+4", "3+2", "4+1"],
+  5: ["auto", "2+3", "1+4", "3+2", "4+1"],
   6: ["3+3", "2+4", "4+2", "2+2+2"]
 };
 
@@ -2298,12 +2298,24 @@ function subgroupFingers(midis, thumb, groupSize) {
 }
 
 // 4er-Gruppe automatisch (nach Petru): ab Bund 8 mit Quarte als Umfang + 1 2 3 (C+ D1 E2 F3),
-// sonst zwei Paare: Ganzton 1-4, ab Bund 10 1-3; Halbton 2-4, ab Bund 7 1-2 (H1 C2 D1 E3 | F1 G4 A1 H3).
+// sonst zwei Paare: Ganzton 1-4, ab Bund 10 1-3; Halbton am Anfang 1-2, am Ende der Saite 2-4
+// (H1 C2 D1 E3 | F1 G4 A1 H3).
 function autoFour(g) {
   if (g[0].fret >= 8 && g[3].midi - g[0].midi <= 5) return ["+", 1, 2, 3];
-  const pair = (a, b) => b.midi - a.midi <= 1 ? a.fret >= 7 ? [1, 2] : [2, 4] : a.fret >= 10 ? [1, 3] : [1, 4];
-  return [...pair(g[0], g[1]), ...pair(g[2], g[3])];
+  const pair = (a, b, last) => b.midi - a.midi <= 1 ? last ? [2, 4] : [1, 2] : a.fret >= 10 ? [1, 3] : [1, 4];
+  return [...pair(g[0], g[1], false), ...pair(g[2], g[3], true)];
 }
+
+// 5er-Gruppe automatisch: erster Ton allein, dann wie eine 4er-Gruppe; liegt diese mit Daumen,
+// beginnt auch der erste Ton mit Daumen (F1 G1 A4 H2 C4 | … | H+ C+ D1 E2 F3).
+function autoFive(g) {
+  const rest = autoFour(g.slice(1));
+  return [rest[0] === "+" ? "+" : 1, ...rest];
+}
+const AUTO = {
+  4: autoFour,
+  5: autoFive
+};
 function buildGroup({
   rootIndex,
   scale,
@@ -2340,8 +2352,8 @@ function buildGroup({
   const used = split && GROUP_SPLITS[size].includes(split) ? split : GROUP_SPLITS[size][0];
   const parts = used === "auto" ? [] : used.split("+").map(Number);
   if (used === "auto") for (let st = 0; st < 4; st++) {
-    const g = upSeq.slice(st * 4, st * 4 + 4);
-    autoFour(g).forEach((f, j) => g[j].finger = f);
+    const g = upSeq.slice(st * size, st * size + size);
+    AUTO[size](g).forEach((f, j) => g[j].finger = f);
   } else for (let st = 0; st < 4; st++) {
     let i = st * size;
     parts.forEach(p => {
