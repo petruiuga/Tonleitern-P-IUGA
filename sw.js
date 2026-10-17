@@ -1,6 +1,6 @@
 // Offline-Speicher: alle App-Dateien werden beim ersten Öffnen abgelegt.
 // Bei Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = "tonleitern-v8";
+const CACHE = "tonleitern-v9";
 const FILES = [
   "./",
   "index.html",

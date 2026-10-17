@@ -2327,7 +2327,9 @@ function buildGroup({
   };
   // ab D auf der E-Saite (Lage 6) mit Daumen
   const thumb = upSeq[0].fret >= THUMB_FROM_FRET;
-  const parts = (split && GROUP_SPLITS[size].includes(split) ? split : GROUP_SPLITS[size][0]).split("+").map(Number);
+  // ohne eigene Wahl: in Daumenlagen die 4er-Gruppe als eine Handstellung (+ 1 2 3), jede Saite beginnt mit dem Daumen
+  const used = split && GROUP_SPLITS[size].includes(split) ? split : thumb && size === 4 ? "4" : GROUP_SPLITS[size][0];
+  const parts = used.split("+").map(Number);
   for (let st = 0; st < 4; st++) {
     let i = st * size;
     parts.forEach(p => {
@@ -2346,7 +2348,10 @@ function buildGroup({
       finger: fingerAt[n.midi] ?? x.finger
     };
   });
-  return finish(upSeq, downSeq, ctx, lageFret, false);
+  return {
+    ...finish(upSeq, downSeq, ctx, lageFret, false),
+    split: used
+  };
 }
 
 // Name der Startstufe (für die Stufenwahl der Gruppen)
@@ -3186,7 +3191,7 @@ function GriffbrettTonleiter({
     className: "ds-label"
   }, t("Fingersatz")), GROUP_SPLITS[groupSize].map(sp => /*#__PURE__*/React.createElement("button", {
     key: sp,
-    className: `ds-chip ${sp === (splits[groupSize] || GROUP_SPLITS[groupSize][0]) ? "active" : ""}`,
+    className: `ds-chip ${sp === (run.split || splits[groupSize] || GROUP_SPLITS[groupSize][0]) ? "active" : ""}`,
     onClick: () => setSplits(x => ({
       ...x,
       [groupSize]: sp
