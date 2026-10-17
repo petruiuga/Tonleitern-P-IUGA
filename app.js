@@ -99,6 +99,23 @@ const TR = {
   "nur Stimme": ["Voice only", "Voix seule"],
   "Taktwechsel (z. B. „5/8 3/4“ oder „7/8(2+2+3)“), leer = normaler Takt": ["Changing meters (e.g. “5/8 3/4” or “7/8(2+2+3)”), empty = normal meter", "Changements de mesure (p. ex. « 5/8 3/4 » ou « 7/8(2+2+3) »), vide = mesure normale"],
   "Das Tempo gilt für die Viertelnote. In Achteltakten zählt jede Achtel, der Anfang jeder Gruppe ist betont (5/8 = 3+2).": ["The tempo is for the quarter note. In eighth-note meters every eighth is counted and the start of each group is accented (5/8 = 3+2).", "Le tempo vaut pour la noire. Dans les mesures en croches, chaque croche est comptée et le début de chaque groupe est accentué (5/8 = 3+2)."],
+  "Empfindlichkeit": ["Sensitivity", "Sensibilité"],
+  "normal": ["normal", "normale"],
+  "hoch": ["high", "élevée"],
+  "sehr hoch": ["very high", "très élevée"],
+  "und": ["and", "et"],
+  "Stimme": ["Voice", "Voix"],
+  "Standard": ["Standard", "Standard"],
+  "Eigene": ["My own", "La mienne"],
+  "Eigene Stimme aufnehmen": ["Record your own voice", "Enregistrer votre propre voix"],
+  "Tippe auf „Alle aufnehmen“ und sprich jedes Wort, sobald es groß erscheint. Fehlende Wörter spricht die Standardstimme.": ["Tap “Record all” and say each word as soon as it appears in large letters. Missing words are spoken by the standard voice.", "Touchez « Tout enregistrer » et dites chaque mot dès qu’il apparaît en grand. Les mots manquants sont dits par la voix standard."],
+  "Aufnahme beenden": ["Stop recording", "Arrêter l’enregistrement"],
+  "Alle aufnehmen": ["Record all", "Tout enregistrer"],
+  "Aufnehmen": ["Record", "Enregistrer"],
+  "Anhören": ["Listen", "Écouter"],
+  "Löschen": ["Delete", "Supprimer"],
+  "Takt anhängen": ["Add a bar", "Ajouter une mesure"],
+  "Letzten Takt entfernen": ["Remove last bar", "Retirer la dernière mesure"],
   // Tonleitern / Griffbrett
   "Tonleitern über 4 Saiten": ["Scales across 4 strings", "Gammes sur 4 cordes"],
   "Lagen": ["Positions", "Positions"],
@@ -243,6 +260,23 @@ const RO = {
   "nur Stimme": "Doar voce",
   "Taktwechsel (z. B. „5/8 3/4“ oder „7/8(2+2+3)“), leer = normaler Takt": "Schimbări de măsură (de ex. „5/8 3/4” sau „7/8(2+2+3)”), gol = măsură normală",
   "Das Tempo gilt für die Viertelnote. In Achteltakten zählt jede Achtel, der Anfang jeder Gruppe ist betont (5/8 = 3+2).": "Tempoul se referă la pătrime. În măsurile cu optimi se numără fiecare optime, iar începutul fiecărui grup este accentuat (5/8 = 3+2).",
+  "Empfindlichkeit": "Sensibilitate",
+  "normal": "normală",
+  "hoch": "ridicată",
+  "sehr hoch": "foarte ridicată",
+  "und": "și",
+  "Stimme": "Voce",
+  "Standard": "Standard",
+  "Eigene": "Proprie",
+  "Eigene Stimme aufnehmen": "Înregistrează-ți propria voce",
+  "Tippe auf „Alle aufnehmen“ und sprich jedes Wort, sobald es groß erscheint. Fehlende Wörter spricht die Standardstimme.": "Atinge „Înregistrează tot” și spune fiecare cuvânt imediat ce apare mare. Cuvintele lipsă sunt spuse de vocea standard.",
+  "Aufnahme beenden": "Oprește înregistrarea",
+  "Alle aufnehmen": "Înregistrează tot",
+  "Aufnehmen": "Înregistrează",
+  "Anhören": "Ascultă",
+  "Löschen": "Șterge",
+  "Takt anhängen": "Adaugă o măsură",
+  "Letzten Takt entfernen": "Elimină ultima măsură",
   "Tonleitern über 4 Saiten": "Game pe 4 coarde",
   "Lagen": "Poziții",
   "Gruppen": "Grupuri",
@@ -591,21 +625,196 @@ function playClick(ctx, out, t, sound, level) {
 }
 
 // ─── Zählstimme: kurze Aufnahmen 1–12 und „und“ pro Sprache (Ordner voice/) ───
+// Dazu eigene Aufnahmen (wie bei Navi-Apps), gespeichert im Browser (IndexedDB).
+const VOICE_WORDS = [...Array.from({
+  length: 12
+}, (_, i) => String(i + 1)), "and"];
 const voiceCache = {};
-function loadVoice(ctx) {
-  const key = LANG;
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("tonleitern", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("voice");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbDo(mode, fn) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("voice", mode);
+    const req = fn(tx.objectStore("voice"));
+    tx.oncomplete = () => res(req?.result);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+const ownGetAll = async () => {
+  try {
+    const out = {};
+    await Promise.all(VOICE_WORDS.map(async w => {
+      const b = await idbDo("readonly", st => st.get(w));
+      if (b) out[w] = b;
+    }));
+    return out;
+  } catch {
+    return {};
+  }
+};
+const ownPut = (w, blob) => idbDo("readwrite", st => st.put(blob, w));
+const ownDel = w => idbDo("readwrite", st => st.delete(w));
+const decode = (ctx, ab) => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej));
+
+// Stille vorn und hinten abschneiden, damit das Wort genau auf dem Schlag beginnt
+function trimBuffer(ctx, buf) {
+  const x = buf.getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < x.length; i++) peak = Math.max(peak, Math.abs(x[i]));
+  if (!peak) return buf;
+  const thr = peak * 0.08;
+  let a = 0;
+  while (a < x.length && Math.abs(x[a]) < thr) a++;
+  let b = x.length - 1;
+  while (b > a && Math.abs(x[b]) < thr) b--;
+  a = Math.max(0, a - Math.floor(buf.sampleRate * 0.008));
+  b = Math.min(x.length, b + Math.floor(buf.sampleRate * 0.06));
+  const out = ctx.createBuffer(1, b - a, buf.sampleRate);
+  const y = out.getChannelData(0);
+  const gain = 0.9 / peak;
+  for (let i = 0; i < y.length; i++) y[i] = x[a + i] * gain;
+  return out;
+}
+function loadVoice(ctx, own) {
+  const key = LANG + (own ? ":own" : "");
   if (!voiceCache[key]) {
-    const names = [...Array.from({
-      length: 12
-    }, (_, i) => String(i + 1)), "and"];
-    voiceCache[key] = Promise.all(names.map(n => fetch(`voice/${key}/${n}.wav`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => new Promise((res, rej) => ctx.decodeAudioData(b, res, rej))).then(buf => [n, buf]).catch(() => [n, null]))).then(list => Object.fromEntries(list));
+    voiceCache[key] = (async () => {
+      const std = Object.fromEntries(await Promise.all(VOICE_WORDS.map(n => fetch(`voice/${LANG}/${n}.wav`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => decode(ctx, b)).then(buf => [n, buf]).catch(() => [n, null]))));
+      if (!own) return std;
+      const blobs = await ownGetAll();
+      await Promise.all(Object.entries(blobs).map(async ([w, blob]) => {
+        try {
+          std[w] = trimBuffer(ctx, await decode(ctx, await blob.arrayBuffer()));
+        } catch {/* Aufnahme unlesbar: Standardstimme */}
+      }));
+      return std;
+    })();
   }
   return voiceCache[key];
+}
+
+// Eigene Zählstimme aufnehmen: alle Wörter nacheinander oder einzeln
+function EigeneStimme({
+  onChange
+}) {
+  const [have, setHave] = useState({});
+  const [busy, setBusy] = useState(null);
+  const [prompt, setPrompt] = useState("");
+  const [err, setErr] = useState("");
+  const stopRef = useRef(false);
+  const refresh = () => ownGetAll().then(setHave);
+  useEffect(() => {
+    refresh();
+  }, []);
+  const label = w => w === "and" ? t("und") : w;
+  const recordOne = (stream, ms) => new Promise(res => {
+    const mr = new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+    mr.onstop = () => res(new Blob(chunks, {
+      type: mr.mimeType || "audio/webm"
+    }));
+    mr.start();
+    setTimeout(() => mr.state === "recording" && mr.stop(), ms);
+  });
+  const run = async words => {
+    setErr("");
+    stopRef.current = false;
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      });
+    } catch (e) {
+      setErr(t("Kein Zugriff aufs Mikrofon. Bitte in den Browser-Einstellungen für diese Seite erlauben und neu laden."));
+      return;
+    }
+    try {
+      for (const w of words) {
+        if (stopRef.current) break;
+        setBusy(w);
+        setPrompt(label(w));
+        await new Promise(r => setTimeout(r, 450));
+        const blob = await recordOne(stream, 1300);
+        await ownPut(w, blob);
+      }
+    } finally {
+      stream.getTracks().forEach(x => x.stop());
+      setBusy(null);
+      setPrompt("");
+      delete voiceCache[LANG + ":own"];
+      refresh();
+      onChange?.();
+    }
+  };
+  const play = async w => {
+    await Tone.start();
+    const ctx = Tone.getContext().rawContext;
+    const blob = have[w];
+    if (!blob) return;
+    const src = ctx.createBufferSource();
+    src.buffer = trimBuffer(ctx, await decode(ctx, await blob.arrayBuffer()));
+    src.connect(ctx.destination);
+    src.start();
+  };
+  const remove = async w => {
+    await ownDel(w);
+    delete voiceCache[LANG + ":own"];
+    refresh();
+    onChange?.();
+  };
+  return /*#__PURE__*/React.createElement("details", {
+    className: "mt-own"
+  }, /*#__PURE__*/React.createElement("summary", null, t("Eigene Stimme aufnehmen")), /*#__PURE__*/React.createElement("p", {
+    className: "ds-hint"
+  }, t("Tippe auf „Alle aufnehmen“ und sprich jedes Wort, sobald es groß erscheint. Fehlende Wörter spricht die Standardstimme.")), /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, busy ? /*#__PURE__*/React.createElement("button", {
+    className: "ds-btn-sm rec",
+    onClick: () => stopRef.current = true
+  }, "\u25A0 ", t("Aufnahme beenden")) : /*#__PURE__*/React.createElement("button", {
+    className: "ds-btn-sm",
+    onClick: () => run(VOICE_WORDS)
+  }, "\u25CF ", t("Alle aufnehmen")), prompt && /*#__PURE__*/React.createElement("span", {
+    className: "mt-prompt"
+  }, prompt)), /*#__PURE__*/React.createElement("div", {
+    className: "mt-words"
+  }, VOICE_WORDS.map(w => /*#__PURE__*/React.createElement("div", {
+    key: w,
+    className: `mt-word ${have[w] ? "has" : ""} ${busy === w ? "rec" : ""}`
+  }, /*#__PURE__*/React.createElement("b", null, label(w)), /*#__PURE__*/React.createElement("button", {
+    className: "ds-chip",
+    disabled: !!busy,
+    onClick: () => run([w]),
+    "aria-label": t("Aufnehmen")
+  }, "\u25CF"), have[w] && /*#__PURE__*/React.createElement("button", {
+    className: "ds-chip",
+    onClick: () => play(w),
+    "aria-label": t("Anhören")
+  }, "\u25B6"), have[w] && /*#__PURE__*/React.createElement("button", {
+    className: "ds-chip",
+    disabled: !!busy,
+    onClick: () => remove(w),
+    "aria-label": t("Löschen")
+  }, "\u2715")))), err && /*#__PURE__*/React.createElement("p", {
+    className: "ds-error"
+  }, err));
 }
 
 // ─── Taktwechsel ───
 // „5/8 3/4“, „4/4 + 6/8“, Gruppen in Klammern: „7/8(2+2+3)“. Tempo gilt für die Viertel.
 const DEFAULT_GROUPS = {
+  4: [2, 2],
   5: [3, 2],
   6: [3, 3],
   7: [2, 2, 3],
@@ -615,7 +824,9 @@ const DEFAULT_GROUPS = {
   11: [3, 3, 3, 2],
   12: [3, 3, 3, 3]
 };
-const METER_PRESETS = ["5/8 3/4", "4/4 6/8", "3/4 2/4", "7/8(2+2+3)", "5/8(2+3) 6/8"];
+const METER_PRESETS = ["5/8 3/4", "4/4 6/8", "5/8 2/4", "3/8 2/4", "3/4 2/4", "7/8(2+2+3)"];
+// Bausteine zum Zusammenstellen beliebiger Folgen
+const METER_BLOCKS = ["2/4", "3/4", "4/4", "5/4", "2/8", "3/8", "5/8", "6/8", "7/8", "9/8", "12/8"];
 function parseMeters(text) {
   const bars = [];
   const bad = [];
@@ -693,6 +904,7 @@ function Metronom() {
   const [accent, setAccent] = useState(true);
   const [volume, setVolume] = useState(0.8);
   const [voice, setVoice] = useState("off");
+  const [ownVoice, setOwnVoice] = useState(false);
   const [meterText, setMeterText] = useState("");
   const [running, setRunning] = useState(false);
   const [beat, setBeat] = useState(-1);
@@ -716,6 +928,8 @@ function Metronom() {
     voice,
     meters
   };
+  const ownRef = useRef(ownVoice);
+  ownRef.current = ownVoice;
   const stop = () => {
     const e = engineRef.current;
     if (e) {
@@ -761,7 +975,7 @@ function Metronom() {
       timeouts: [],
       voice: null
     };
-    e.voice = await loadVoice(ctx);
+    e.voice = await loadVoice(ctx, ownRef.current);
     e.next = ctx.currentTime + 0.1;
     e.timer = setInterval(() => {
       const s = stateRef.current;
@@ -795,6 +1009,11 @@ function Metronom() {
     document.activeElement?.blur?.();
   };
   useEffect(() => () => engineRef.current && stop(), []);
+  const reloadVoice = () => {
+    const e = engineRef.current;
+    if (e) loadVoice(e.ctx, ownRef.current).then(v => e.voice = v);
+  };
+  useEffect(reloadVoice, [ownVoice]);
 
   // Takt-, Unterteilungs- oder Taktwechsel-Änderung: am Anfang neu einsetzen
   const meterKey = meters.map(m => m.label).join(" ");
@@ -895,7 +1114,14 @@ function Metronom() {
     value: "click"
   }, t("Stimme + Klang")), /*#__PURE__*/React.createElement("option", {
     value: "only"
-  }, t("nur Stimme")))), /*#__PURE__*/React.createElement("label", null, t("Takt"), " ", /*#__PURE__*/React.createElement("select", {
+  }, t("nur Stimme")))), voice !== "off" && /*#__PURE__*/React.createElement("label", null, t("Stimme"), " ", /*#__PURE__*/React.createElement("select", {
+    value: ownVoice ? "own" : "std",
+    onChange: e => setOwnVoice(e.target.value === "own")
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "std"
+  }, t("Standard")), /*#__PURE__*/React.createElement("option", {
+    value: "own"
+  }, t("Eigene")))), /*#__PURE__*/React.createElement("label", null, t("Takt"), " ", /*#__PURE__*/React.createElement("select", {
     value: beats,
     onChange: e => setBeats(Number(e.target.value)),
     disabled: !!meterText.trim() && parsed.bars.length > 0
@@ -921,7 +1147,9 @@ function Metronom() {
     step: 0.05,
     value: volume,
     onChange: e => setVolume(Number(e.target.value))
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), voice !== "off" && ownVoice && /*#__PURE__*/React.createElement(EigeneStimme, {
+    onChange: reloadVoice
+  }), /*#__PURE__*/React.createElement("div", {
     className: "mt-meter"
   }, /*#__PURE__*/React.createElement("label", {
     className: "ds-field"
@@ -939,7 +1167,19 @@ function Metronom() {
   }, p.replace(" ", " + "))), meterText && /*#__PURE__*/React.createElement("button", {
     className: "ds-chip",
     onClick: () => setMeterText("")
-  }, t("aus"))), parsed.bad.length > 0 && /*#__PURE__*/React.createElement("p", {
+  }, t("aus"))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-blocks"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Takt anhängen")), METER_BLOCKS.map(m => /*#__PURE__*/React.createElement("button", {
+    key: m,
+    className: "ds-chip",
+    onClick: () => setMeterText(x => (x.trim() ? x.trim() + " " : "") + m)
+  }, "+ ", m)), meterText.trim() && /*#__PURE__*/React.createElement("button", {
+    className: "ds-chip",
+    onClick: () => setMeterText(x => x.trim().split(/\s+/).slice(0, -1).join(" ")),
+    "aria-label": t("Letzten Takt entfernen")
+  }, "\u232B")), parsed.bad.length > 0 && /*#__PURE__*/React.createElement("p", {
     className: "ds-error"
   }, t("Nicht erkannt: {e}", {
     e: parsed.bad.join(", ")
@@ -963,15 +1203,33 @@ const A4_CHOICES = Array.from({
 }, (_, i) => 420 + i);
 const A4_QUICK = [435, 440, 442, 443];
 const TOLERANCES = [5, 10, 15, 20];
-const TRACE_LEN = 70; // ~6 Sekunden Verlauf
+const TRACE_LEN = 120; // ~5 Sekunden Verlauf
 
-// Tonhöhenerkennung (YIN), reicht bis zum tiefen E des Kontrabasses (41 Hz)
-function detectPitch(buf, sr) {
-  let rms = 0;
-  for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
-  rms = Math.sqrt(rms / buf.length);
-  if (rms < 0.01) return null;
-  const minTau = Math.floor(sr / 1200);
+// Empfindlichkeit: Mindestlautstärke (RMS), ab der ein Ton erkannt wird
+const SENSITIVITY = {
+  normal: 0.006,
+  hoch: 0.002,
+  "sehr hoch": 0.0007
+};
+const rmsOf = buf => {
+  let sum = 0;
+  for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+  return Math.sqrt(sum / buf.length);
+};
+
+// Tonhöhenerkennung (YIN) vom tiefen E des Kontrabasses (41 Hz) bis in die Flageolett-Lagen (~1500 Hz).
+// Bei 44,1/48 kHz wird erst auf die halbe Abtastrate gemittelt: viermal weniger Rechenarbeit,
+// damit auch schnelle Töne in kurzen Abständen gemessen werden können.
+function detectPitch(input, srIn, minRms = 0.006) {
+  if (rmsOf(input) < minRms) return null;
+  let buf = input;
+  let sr = srIn;
+  if (srIn > 32000) {
+    buf = new Float32Array(input.length >> 1);
+    for (let i = 0; i < buf.length; i++) buf[i] = (input[2 * i] + input[2 * i + 1]) / 2;
+    sr = srIn / 2;
+  }
+  const minTau = Math.max(2, Math.floor(sr / 1500));
   const maxTau = Math.min(Math.floor(sr / 38), Math.floor(buf.length / 2));
   const W = buf.length - maxTau;
   const d = new Float32Array(maxTau + 1);
@@ -992,11 +1250,17 @@ function detectPitch(buf, sr) {
     cmnd[t] = running ? d[t] * t / running : 1;
   }
   for (let t = minTau; t <= maxTau; t++) {
-    if (cmnd[t] < 0.15) {
+    if (cmnd[t] < 0.2) {
       while (t + 1 <= maxTau && cmnd[t + 1] < cmnd[t]) t++;
       tau = t;
       break;
     }
+  }
+  // leise oder obertonreiche Töne: deutlichstes Minimum nehmen, wenn es klar genug ist
+  if (tau < 0) {
+    let best = minTau;
+    for (let t = minTau; t <= maxTau; t++) if (cmnd[t] < cmnd[best]) best = t;
+    if (cmnd[best] < 0.35) tau = best;
   }
   if (tau < 0) return null;
   const x0 = cmnd[tau - 1] ?? cmnd[tau];
@@ -1214,6 +1478,9 @@ function Stimmgeraet({
   const [reading, setReading] = useState(null);
   const [trace, setTrace] = useState([]);
   const [tol, setTol] = useState(10);
+  const [sens, setSens] = useState("hoch");
+  const sensRef = useRef(sens);
+  sensRef.current = sens;
   const [recording, setRecording] = useState(false);
   const [events, setEvents] = useState([]);
   const [result, setResult] = useState(null);
@@ -1227,12 +1494,12 @@ function Stimmgeraet({
     cur: null
   });
 
-  // Aktuellen Ton abschließen: mindestens ~0,3 s gehalten zählt als gespielter Ton
+  // Aktuellen Ton abschließen: zwei gültige Messungen (~0,1 s) zählen schon als gespielter Ton
   const closeEvent = () => {
     const r = recRef.current;
     const c = r.cur;
     r.cur = null;
-    if (!r.active || !c || c.cents.length < 3) return;
+    if (!r.active || !c || c.cents.length < 2) return;
     const ev = {
       midi: c.midi,
       name: NOTE_NAMES[(c.midi % 12 + 12) % 12],
@@ -1272,18 +1539,31 @@ function Stimmgeraet({
       src.connect(analyser);
       const buf = new Float32Array(analyser.fftSize);
       const history = [];
+      let quiet = 0;
+      let lastRms = 0;
       const timer = setInterval(() => {
         analyser.getFloatTimeDomainData(buf);
-        const f = detectPitch(buf, ctx.sampleRate);
+        const level = rmsOf(buf);
+        const f = detectPitch(buf, ctx.sampleRate, SENSITIVITY[sensRef.current]);
+        const r = recRef.current;
         if (!f) {
-          history.length = 0;
-          setReading(null);
+          // eine einzelne Fehlmessung beendet den Ton noch nicht
+          if (++quiet >= 2) {
+            history.length = 0;
+            setReading(null);
+            closeEvent();
+          }
           setTrace(t => [...t, null].slice(-TRACE_LEN));
-          closeEvent();
+          lastRms = level;
           return;
         }
+        quiet = 0;
+        const rawExact = 69 + 12 * Math.log2(f / a4Ref.current);
+        const rawMidi = Math.round(rawExact);
+        // Anzeige ruhig halten (Median aus 3), bei Tonwechsel sofort umspringen
+        if (history.length && Math.abs(69 + 12 * Math.log2(history[history.length - 1] / a4Ref.current) - rawExact) > 0.6) history.length = 0;
         history.push(f);
-        if (history.length > 5) history.shift();
+        if (history.length > 3) history.shift();
         const med = median(history);
         const midiExact = 69 + 12 * Math.log2(med / a4Ref.current);
         const midi = Math.round(midiExact);
@@ -1296,19 +1576,30 @@ function Stimmgeraet({
           cents
         });
         setTrace(t => [...t, cents].slice(-TRACE_LEN));
-        const r = recRef.current;
         if (r.active) {
-          if (r.cur && r.cur.midi !== midi) closeEvent();
+          const rawCents = Math.round((rawExact - rawMidi) * 100);
+          // neuer Ton: andere Tonhöhe, oder gleicher Ton neu angestrichen (Lautstärke springt hoch)
+          // Kurze Pause im Ton (neuer Bogenstrich) erkennen: die neuesten ~80 ms in Blöcken ansehen
+          const B = Math.floor(ctx.sampleRate / 100);
+          const blocks = [];
+          for (let k = buf.length - 8 * B; k < buf.length; k += B) blocks.push(rmsOf(buf.subarray(k, k + B)));
+          const peak = Math.max(r.cur?.peak || 0, ...blocks);
+          const dip = Math.min(...blocks.slice(0, -1)) < peak * 0.3 && blocks[blocks.length - 1] > peak * 0.6;
+          const reattack = r.cur && r.cur.cents.length >= 2 && (dip || level > lastRms * 1.8 && level > 0.01);
+          if (r.cur && (r.cur.midi !== rawMidi || reattack)) closeEvent();
           if (!r.cur) r.cur = {
-            midi,
+            midi: rawMidi,
             cents: [],
-            seen: 0
+            seen: 0,
+            peak: 0
           };
-          // die ersten Messungen eines Tons (Anstrich) nicht werten
+          r.cur.peak = Math.max(r.cur.peak, ...blocks);
+          // die erste Messung eines Tons (Anstrich) nicht werten
           r.cur.seen++;
-          if (r.cur.seen > 2) r.cur.cents.push(cents);
+          if (r.cur.seen > 1) r.cur.cents.push(rawCents);
         }
-      }, 90);
+        lastRms = level;
+      }, 40);
       ref.current = {
         stream,
         ctx,
@@ -1413,7 +1704,13 @@ function Stimmgeraet({
     onClick: recording ? stopRecording : startRecording
   }, recording ? t("■ Aufnahme beenden ({n} Töne)", {
     n: events.length
-  }) : t("● Aufnahme mit Auswertung")), /*#__PURE__*/React.createElement("label", null, t("Sauber bis ±"), " ", /*#__PURE__*/React.createElement("select", {
+  }) : t("● Aufnahme mit Auswertung")), /*#__PURE__*/React.createElement("label", null, t("Empfindlichkeit"), " ", /*#__PURE__*/React.createElement("select", {
+    value: sens,
+    onChange: e => setSens(e.target.value)
+  }, Object.keys(SENSITIVITY).map(k => /*#__PURE__*/React.createElement("option", {
+    key: k,
+    value: k
+  }, t(k))))), /*#__PURE__*/React.createElement("label", null, t("Sauber bis ±"), " ", /*#__PURE__*/React.createElement("select", {
     value: tol,
     onChange: e => setTol(Number(e.target.value))
   }, TOLERANCES.map(x => /*#__PURE__*/React.createElement("option", {
@@ -1539,7 +1836,47 @@ const LAGEN = [{
 }, {
   label: "7",
   fret: 12
+},
+// Obere Lagen mit Daumen in Region 3 und 4: Daumen auf G, A, H, C bzw. D, E, F (Bund der G-Saite),
+// der 1. Finger zwei Bünde darüber; gespielt wird wie ab Lage 6 über alle vier Saiten.
+{
+  label: "R3+G",
+  fret: 14,
+  region: 3,
+  thumbFret: 12
+}, {
+  label: "R3+A",
+  fret: 16,
+  region: 3,
+  thumbFret: 14
+}, {
+  label: "R3+H",
+  fret: 18,
+  region: 3,
+  thumbFret: 16
+}, {
+  label: "R3+C",
+  fret: 19,
+  region: 3,
+  thumbFret: 17
+}, {
+  label: "R4+D",
+  fret: 21,
+  region: 4,
+  thumbFret: 19
+}, {
+  label: "R4+E",
+  fret: 23,
+  region: 4,
+  thumbFret: 21
+}, {
+  label: "R4+F",
+  fret: 24,
+  region: 4,
+  thumbFret: 22
 }];
+// Name einer Lage für die Anzeige (obere Lagen: Daumen-Ton auf der G-Saite)
+const lageName = l => l.region ? `+${nn(SHARP_NAMES[(43 + l.thumbFret) % 12])}` : l.label;
 const THUMB_FROM_FRET = 10; // ab Lage 6 (D auf der E-Saite) mit Daumen
 
 // Klingende Tonhöhe der leeren Saiten (MIDI): E1, A1, D2, G2
@@ -1984,13 +2321,14 @@ function Fingerboard({
     rx: 6,
     fill: "url(#fbWood)"
   }), showWindow && /*#__PURE__*/React.createElement("rect", {
+    className: "fb-win",
     x: fretX(lo - 1),
     y: 18,
     width: fretX(hi) - fretX(lo - 1),
     height: 164,
     fill: "var(--brass)",
     opacity: "0.16"
-  }), LAGEN.filter(l => l.fret <= maxF).map(l => /*#__PURE__*/React.createElement("g", {
+  }), LAGEN.filter(l => l.fret <= maxF && (!l.region || l.fret === lageFret)).map(l => /*#__PURE__*/React.createElement("g", {
     key: l.label
   }, /*#__PURE__*/React.createElement("line", {
     x1: fretX(l.fret - 1),
@@ -2007,7 +2345,7 @@ function Fingerboard({
     fontSize: l.half ? 10 : 12,
     fill: l.half ? "var(--fb-blue)" : "var(--muted)",
     fontWeight: l.fret === lageFret ? 700 : 400
-  }, l.label))), /*#__PURE__*/React.createElement("text", {
+  }, lageName(l)))), /*#__PURE__*/React.createElement("text", {
     x: NUT_X - 32,
     y: 198,
     textAnchor: "middle",
@@ -2383,6 +2721,7 @@ function GriffbrettTonleiter({
   const synthRef = useRef(null);
   const timerRef = useRef(null);
   const lageFret = LAGEN[lage].fret;
+  const wrapRef = useRef(null);
   const stages = useMemo(() => stageNames(rootIndex, scale, lageFret, 11), [rootIndex, scale, lageFret]);
   const run = useMemo(() => {
     if (mode === "gruppen") return buildGroup({
@@ -2473,6 +2812,19 @@ function GriffbrettTonleiter({
     playMidi(n.midi);
     setCurrent(n.i);
   };
+
+  // Auf schmalen Bildschirmen das Griffbrett zur gewählten Lage scrollen (obere Lagen liegen weit rechts)
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const target = wrap?.querySelector(".fb-win") || wrap?.querySelector(".fb-note");
+    if (!wrap || !target || wrap.scrollWidth <= wrap.clientWidth) return;
+    const w = wrap.getBoundingClientRect();
+    const r = target.getBoundingClientRect();
+    wrap.scrollTo({
+      left: wrap.scrollLeft + r.left - w.left - (w.width - r.width) / 2,
+      behavior: "smooth"
+    });
+  }, [lage, mode, rootIndex, scale]);
   const dronePc = dronePcs?.[0];
   const droneRootIndex = dronePc == null ? -1 : ROOTS.findIndex(r => r.pc === dronePc);
   const thumb = lageFret >= THUMB_FROM_FRET;
@@ -2517,14 +2869,27 @@ function GriffbrettTonleiter({
     className: "gt-lagen"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
-  }, t("Lage")), LAGEN.map((l, i) => /*#__PURE__*/React.createElement("button", {
+  }, t("Lage")), LAGEN.map((l, i) => !l.region && /*#__PURE__*/React.createElement("button", {
     key: l.label,
     className: `ds-chip ${i === lage ? "active" : ""} ${l.half ? "half" : ""}`,
     onClick: () => {
       setLage(i);
       setStage(0);
     }
-  }, l.label))), mode === "gruppen" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, l.label))), /*#__PURE__*/React.createElement("div", {
+    className: "gt-lagen"
+  }, [3, 4].map(r => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: r
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Region"), " ", r), LAGEN.map((l, i) => l.region === r && /*#__PURE__*/React.createElement("button", {
+    key: l.label,
+    className: `ds-chip thumb ${i === lage ? "active" : ""}`,
+    onClick: () => {
+      setLage(i);
+      setStage(0);
+    }
+  }, lageName(l)))))), mode === "gruppen" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
@@ -2543,7 +2908,8 @@ function GriffbrettTonleiter({
     className: `ds-chip ${k === stage ? "active" : ""}`,
     onClick: () => setStage(k)
   }, nm)))), /*#__PURE__*/React.createElement("div", {
-    className: "fb-wrap"
+    className: "fb-wrap",
+    ref: wrapRef
   }, /*#__PURE__*/React.createElement(Fingerboard, {
     notes: notes,
     current: current,
@@ -2725,7 +3091,32 @@ function unlockIOSAudio() {
     unlockAudio.play().catch(() => {});
   } catch {/* optional */}
 }
+
+// Bildschirm beim Üben nicht abdunkeln (Screen Wake Lock, nach dem ersten Antippen;
+// beim Zurückkehren in die App neu anfordern).
+function useKeepScreenOn() {
+  useEffect(() => {
+    if (!("wakeLock" in navigator)) return;
+    let lock = null;
+    const request = async () => {
+      if (document.visibilityState !== "visible" || lock && !lock.released) return;
+      try {
+        lock = await navigator.wakeLock.request("screen");
+      } catch {/* nicht erlaubt, z. B. Energiesparmodus */}
+    };
+    const onVisible = () => document.visibilityState === "visible" && request();
+    window.addEventListener("pointerdown", request);
+    document.addEventListener("visibilitychange", onVisible);
+    request();
+    return () => {
+      window.removeEventListener("pointerdown", request);
+      document.removeEventListener("visibilitychange", onVisible);
+      lock?.release?.().catch(() => {});
+    };
+  }, []);
+}
 function DroneSequenz() {
+  useKeepScreenOn();
   const [text, setText] = useState(PRESETS.Quintenzirkel);
   const [index, setIndex] = useState(0);
   const [running, setRunning] = useState(false);

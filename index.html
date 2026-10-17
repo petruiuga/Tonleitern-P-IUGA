@@ -96,6 +96,16 @@ section{scroll-margin-top:56px}
 .mt-dot.small{width:12px;height:12px;margin:3px 0}
 .mt-dot.grp{border-color:var(--wood);border-width:2px}
 .mt-meter{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+.mt-blocks{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+.mt-blocks .ds-chip{min-width:0;padding:4px 8px;font-size:.85rem}
+.mt-own{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+.mt-own summary{cursor:pointer;font-weight:600;color:var(--wood)}
+.mt-prompt{font-size:2.2rem;font-weight:700;color:var(--tu-high);min-width:2ch}
+.mt-words{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
+.mt-word{display:flex;align-items:center;gap:4px;padding:4px 6px;border:1px solid var(--line);border-radius:8px}
+.mt-word b{min-width:2.5ch}.mt-word .ds-chip{min-width:0;padding:2px 8px}
+.mt-word.has{border-color:var(--ok)}.mt-word.rec{border-color:var(--tu-high);background:color-mix(in srgb,var(--tu-high) 12%,transparent)}
+.ds-chip.thumb{border-color:var(--fb-blue)}
 .mt-meter input[type=text]{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
 .tu-trace{display:block;width:100%;height:56px;margin-top:4px;border-radius:8px;background:var(--bg)}
 .ds-btn-sm.rec{background:#c0392b;border-color:#c0392b;color:#fff}
