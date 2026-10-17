@@ -87,6 +87,16 @@ section{scroll-margin-top:56px}
 .tu-verdict{font-size:1.25rem;font-weight:700;color:var(--muted)}
 .tu-verdict.ok{color:var(--ok)}.tu-verdict.tief{color:var(--tu-low)}.tu-verdict.hoch{color:var(--tu-high)}
 .tu-live.ok .tu-note{color:var(--ok)}
+.tu-live.ok .tu-note{text-shadow:0 0 14px color-mix(in srgb,var(--ok) 55%,transparent)}
+.tu-live.tief .tu-note{color:var(--tu-low);text-shadow:0 0 14px color-mix(in srgb,var(--tu-low) 55%,transparent)}
+.tu-live.hoch .tu-note{color:var(--tu-high);text-shadow:0 0 14px color-mix(in srgb,var(--tu-high) 55%,transparent)}
+.mt-bars{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:4px 0}
+.mt-bar{padding:2px 8px;border-radius:6px;border:1px solid var(--line);font-size:.85rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.mt-bar.on{background:var(--brass-soft);border-color:var(--brass);color:var(--text)}
+.mt-dot.small{width:12px;height:12px;margin:3px 0}
+.mt-dot.grp{border-color:var(--wood);border-width:2px}
+.mt-meter{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+.mt-meter input[type=text]{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
 .tu-trace{display:block;width:100%;height:56px;margin-top:4px;border-radius:8px;background:var(--bg)}
 .ds-btn-sm.rec{background:#c0392b;border-color:#c0392b;color:#fff}
 .tu-result{margin-top:12px;padding:12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}

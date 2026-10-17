@@ -5,14 +5,16 @@ const {
   useCallback,
   useMemo
 } = React;
-// ─── Sprachen: Deutsch, English, Français ───
+// ─── Sprachen: Deutsch, English, Français, Română ───
 // Texte stehen im Code auf Deutsch; t() liefert die Übersetzung der gewählten Sprache.
-// Notennamen: deutsch (H, B, Fis, Es), englisch (B, B♭, F♯, E♭), französisch (Si, Si♭, Fa♯, Mi♭).
+// Notennamen: deutsch (H, B, Fis, Es), englisch (B, B♭, F♯, E♭), französisch (Si, Si♭, Fa♯, Mi♭),
+// rumänisch (Si, Si♭, Fa♯, Mi♭, aber Re statt Ré).
 
 const LANGS = {
   de: "Deutsch",
   en: "English",
-  fr: "Français"
+  fr: "Français",
+  ro: "Română"
 };
 const LANG_KEY = "tonleitern-lang";
 const LANG = (() => {
@@ -91,6 +93,12 @@ const TR = {
   "{b}er": ["{b} beats", "{b} temps"],
   "Unterteilung": ["Subdivision", "Subdivision"],
   "Betonte Eins": ["Accent on beat 1", "Premier temps accentué"],
+  "Zählstimme": ["Counting voice", "Voix qui compte"],
+  "aus": ["off", "désactivée"],
+  "Stimme + Klang": ["Voice + click", "Voix + clic"],
+  "nur Stimme": ["Voice only", "Voix seule"],
+  "Taktwechsel (z. B. „5/8 3/4“ oder „7/8(2+2+3)“), leer = normaler Takt": ["Changing meters (e.g. “5/8 3/4” or “7/8(2+2+3)”), empty = normal meter", "Changements de mesure (p. ex. « 5/8 3/4 » ou « 7/8(2+2+3) »), vide = mesure normale"],
+  "Das Tempo gilt für die Viertelnote. In Achteltakten zählt jede Achtel, der Anfang jeder Gruppe ist betont (5/8 = 3+2).": ["The tempo is for the quarter note. In eighth-note meters every eighth is counted and the start of each group is accented (5/8 = 3+2).", "Le tempo vaut pour la noire. Dans les mesures en croches, chaque croche est comptée et le début de chaque groupe est accentué (5/8 = 3+2)."],
   // Tonleitern / Griffbrett
   "Tonleitern über 4 Saiten": ["Scales across 4 strings", "Gammes sur 4 cordes"],
   "Lagen": ["Positions", "Positions"],
@@ -170,9 +178,150 @@ const TR = {
   "Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter · zurück = Pfeil links/oben, Bild auf.": ["Pedal: next = arrow right/down, Page Down, Space, Enter · back = arrow left/up, Page Up.", "Pédale : suivant = flèche droite/bas, Page suivante, Espace, Entrée · précédent = flèche gauche/haut, Page précédente."],
   "Zuletzt empfangen:": ["Last received:", "Dernière touche reçue :"]
 };
+
+// Română
+const RO = {
+  "Tonleitern & Drone": "Game & Bordun",
+  "Stimmgerät": "Acordor",
+  "Metronom": "Metronom",
+  "Tonleitern": "Game",
+  "Drone": "Bordun",
+  "Sprache": "Limbă",
+  "Oktave": "Octava",
+  "Lautstärke": "Volum",
+  "■ Stopp": "■ Stop",
+  "Kammerton a¹": "Diapazon La",
+  "zu tief": "prea jos",
+  "sauber": "curat",
+  "zu hoch": "prea sus",
+  "Spiel einen Ton…": "Cântă o notă…",
+  "Mikrofon aus": "Microfon oprit",
+  "Stimmgerät aus": "Oprește acordorul",
+  "🎤 Stimmgerät an": "🎤 Pornește acordorul",
+  "■ Aufnahme beenden ({n} Töne)": "■ Oprește înregistrarea ({n} note)",
+  "● Aufnahme mit Auswertung": "● Înregistrare cu evaluare",
+  "Sauber bis ±": "Curat până la ±",
+  "Bisher: {ok} sauber · {low} zu tief · {high} zu hoch": "Până acum: {ok} curate · {low} prea jos · {high} prea sus",
+  "Auswertung": "Evaluare",
+  "Keine gehaltenen Töne erkannt. Töne etwas länger halten und näher ans Mikrofon.": "Nu s-au recunoscut note ținute. Ține notele puțin mai mult și apropie-te de microfon.",
+  "Töne": "Note",
+  "sauber ({p} %)": "curate ({p} %)",
+  "Ø Abweichung (Cent)": "Abatere medie (cenți)",
+  "Ton": "Notă",
+  "Anzahl": "Număr",
+  "Ø Cent": "Cenți medii",
+  "Cent": "cenți",
+  "Aufnahme anhören": "Ascultă înregistrarea",
+  "Stimmton": "Notă de referință",
+  "Halten (bis erneut tippen)": "Ține (până la următoarea atingere)",
+  "Fehler": "Eroare",
+  "Dieser Browser gibt hier kein Mikrofon frei (Seite muss über https geöffnet sein).": "Acest browser nu permite microfonul aici (pagina trebuie deschisă prin https).",
+  "In diesem Vorschaufenster blockiert die umgebende Seite das Mikrofon, auch wenn der Browser es erlaubt hat. In der installierten App bzw. auf der eigenen Internetadresse funktioniert das Stimmgerät. Der Stimmton geht hier trotzdem.": "În această fereastră de previzualizare, pagina din jur blochează microfonul, chiar dacă browserul l-a permis. Acordorul funcționează în aplicația instalată sau la adresa proprie a aplicației. Nota de referință funcționează totuși aici.",
+  "Kein Zugriff aufs Mikrofon. Bitte in den Browser-Einstellungen für diese Seite erlauben und neu laden.": "Nu există acces la microfon. Permite-l pentru această pagină în setările browserului și reîncarcă.",
+  "Kein Mikrofon gefunden.": "Nu s-a găsit niciun microfon.",
+  "Das Mikrofon wird gerade von einer anderen App benutzt.": "Microfonul este folosit de o altă aplicație.",
+  "Mikrofon nicht verfügbar ({name}). Der Stimmton funktioniert trotzdem.": "Microfon indisponibil ({name}). Nota de referință funcționează totuși.",
+  "Mechanisch": "Mecanic",
+  "Hoch": "Înalt",
+  "Dirigentenstock": "Bagheta dirijorului",
+  "Klatschen": "Bătăi din palme",
+  "Triole": "Triolet",
+  "Langsamer": "Mai rar",
+  "Schneller": "Mai repede",
+  "Schläge pro Minute": "bătăi pe minut",
+  "Tempo": "Tempo",
+  "■ Metronom stoppen": "■ Oprește metronomul",
+  "▶ Metronom starten": "▶ Pornește metronomul",
+  "Takt": "Măsură",
+  "ohne": "fără",
+  "{b}er": "{b} timpi",
+  "Unterteilung": "Subdiviziune",
+  "Betonte Eins": "Accent pe timpul 1",
+  "Zählstimme": "Voce care numără",
+  "aus": "oprit",
+  "Stimme + Klang": "Voce + clic",
+  "nur Stimme": "Doar voce",
+  "Taktwechsel (z. B. „5/8 3/4“ oder „7/8(2+2+3)“), leer = normaler Takt": "Schimbări de măsură (de ex. „5/8 3/4” sau „7/8(2+2+3)”), gol = măsură normală",
+  "Das Tempo gilt für die Viertelnote. In Achteltakten zählt jede Achtel, der Anfang jeder Gruppe ist betont (5/8 = 3+2).": "Tempoul se referă la pătrime. În măsurile cu optimi se numără fiecare optime, iar începutul fiecărui grup este accentuat (5/8 = 3+2).",
+  "Tonleitern über 4 Saiten": "Game pe 4 coarde",
+  "Lagen": "Poziții",
+  "Gruppen": "Grupuri",
+  "Regionen": "Regiuni",
+  "Grundton": "Tonica",
+  "Tonleiter": "Gama",
+  "Dur": "Major",
+  "Moll natürlich": "Minor natural",
+  "Moll harmonisch": "Minor armonic",
+  "Moll melodisch": "Minor melodic",
+  "Chromatisch": "Cromatic",
+  "Ganzton": "Hexatonală (tonuri întregi)",
+  "Grundton = Drone ({n})": "Tonica = bordun ({n})",
+  "Lage": "Poziția",
+  "Gruppe": "Grup",
+  "{g}er": "{g} pe coardă",
+  "Ab Stufe": "De la treapta",
+  "Griffbrett": "Tastieră",
+  "In dieser Lage passt die Folge nicht aufs Griffbrett.": "În această poziție, secvența nu încape pe tastieră.",
+  "{up} Töne aufwärts, {down} abwärts · kleine Zahl = Finger, 0 = leere Saite": "{up} note în sus, {down} în jos · cifra mică = deget, 0 = coardă liberă",
+  ", + = Daumen (blauer Rand)": ", + = degetul mare (contur albastru)",
+  "{g} Töne pro Saite, {up} aufwärts und zurück": "{g} note pe coardă, {up} în sus și înapoi",
+  " · grüner Ring = aktueller Drone-Ton": " · cerc verde = nota actuală a bordunului",
+  "▶ Abspielen": "▶ Redă",
+  "Leersaiten beim Saitenwechsel": "Coarde libere la schimbarea coardei",
+  "Alle Stufen nacheinander": "Toate treptele la rând",
+  "Eine Oktave höher (notiert)": "O octavă mai sus (cum se scrie)",
+  "Saite": "Coarda",
+  "{s}-Saite": "Coarda {s}",
+  "Regionen der Saite": "Regiunile coardei",
+  "Untere Lagen (Region 1–2)": "Poziții joase (regiunile 1–2)",
+  "Obere Lagen (ab Region 3)": "Poziții înalte (de la regiunea 3)",
+  "Sattel": "Prag",
+  "→ Steg": "→ Căluș",
+  "Daumen-Lagen (Region 3: 1–4, Region 4: 1–3)": "Poziții cu degetul mare (regiunea 3: 1–4, regiunea 4: 1–3)",
+  "◇ = Flageolett (antippen zum Anhören) · ↓ = Naturseptime, klingt tiefer · Abstände zum Steg hin gedehnt": "◇ = flageolet (atinge pentru a asculta) · ↓ = septima naturală, sună mai jos · distanțele sunt mărite spre căluș",
+  "Region": "Regiunea",
+  "untere Lagen, ab der 2. Region schon mit Daumen möglich.": "poziții joase; din regiunea 2 se poate folosi deja degetul mare.",
+  "obere Lagen, Daumen auf {list} (1.–4. Lage).": "poziții înalte, degetul mare pe {list} (pozițiile 1–4).",
+  "Daumen auf {list} (1.–3. Lage).": "degetul mare pe {list} (pozițiile 1–3).",
+  "Flageoletts {h}, dazu die Zwischentöne {s}.": "flageolete {h}, plus notele intermediare {s}.",
+  "Flageoletts {h}.": "flageolete {h}.",
+  "Drone-Sequenz": "Secvență de bordun",
+  "Jetzt": "Acum",
+  "keine Töne": "nicio notă",
+  "Nächster": "Următorul",
+  "Zurück": "Înapoi",
+  "Weiter": "Înainte",
+  "▶ Drone starten": "▶ Pornește bordunul",
+  "Der Browser blockiert den Ton ({s}). Bitte Stopp und noch einmal „Drone starten“ tippen.": "Browserul blochează sunetul ({s}). Atinge Stop și apoi din nou „Pornește bordunul”.",
+  "Tonfolge (z. B. „C G D A“, Akkorde mit Bindestrich: „C-E-G-B“, Oktave optional: „G1“)": "Succesiune de note (de ex. „Do Sol Re La”, acorduri cu cratimă: „Do-Mi-Sol-Si♭”, octava opțional: „Sol1”)",
+  "Nicht erkannt: {e}": "Nerecunoscut: {e}",
+  "Vorlage wählen…": "Alege un model…",
+  "Gespeichert": "Salvate",
+  "Folge speichern": "Salvează succesiunea",
+  "Name für diese Folge:": "Numele acestei succesiuni:",
+  "Klang": "Sunet",
+  "Quinte (bei Einzeltönen)": "Cvintă (la note simple)",
+  "Oktave dazu": "Adaugă octava",
+  "Endlos": "În buclă",
+  "Leertaste": "Spațiu",
+  "Quintenzirkel": "Cercul cvintelor",
+  "Quartenzirkel": "Cercul cvartelor",
+  "Blues in F": "Blues în Fa",
+  "Kadenz I–IV–V–I": "Cadența I–IV–V–I",
+  "Akkorde I–IV–V–I": "Acorduri I–IV–V–I",
+  "Septakkorde (Quartenzirkel)": "Acorduri de septimă (cercul cvartelor)",
+  "Kontrabass": "Contrabas",
+  "Klavier": "Pian",
+  "Oboe": "Oboi",
+  "Violine": "Vioară",
+  "Sinus": "Sinus",
+  "Kein Ton? Lautstärke am Gerät prüfen, am iPhone den Stummschalter aus. Laptop- und Handylautsprecher geben tiefe Töne kaum wieder: Oktave 3 oder 4 wählen oder Kopfhörer nutzen.": "Nu se aude? Verifică volumul dispozitivului și dezactivează modul silențios pe iPhone. Difuzoarele de laptop și telefon redau slab notele joase: alege octava 3 sau 4 sau folosește căști.",
+  "Pedal: weiter = Pfeil rechts/unten, Bild ab, Leertaste, Enter · zurück = Pfeil links/oben, Bild auf.": "Pedală: înainte = săgeată dreapta/jos, Page Down, Spațiu, Enter · înapoi = săgeată stânga/sus, Page Up.",
+  "Zuletzt empfangen:": "Ultima tastă primită:"
+};
 function t(de, vars) {
   const row = TR[de];
-  let s = LANG === "de" || !row ? de : row[LANG === "en" ? 0 : 1];
+  let s = LANG === "de" ? de : LANG === "ro" ? RO[de] ?? de : row ? row[LANG === "en" ? 0 : 1] : de;
   if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
   return s;
 }
@@ -183,6 +332,7 @@ const NATURAL = [0, 2, 4, 5, 7, 9, 11];
 const DE_LETTERS = ["C", "D", "E", "F", "G", "A", "H"];
 const EN_LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
 const FR_SYL = ["Do", "Ré", "Mi", "Fa", "Sol", "La", "Si"];
+const RO_SYL = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
 const pcOf = n => (NATURAL[n.letter] + n.acc + 24) % 12;
 function renderIn(lang, {
   letter,
@@ -196,7 +346,7 @@ function renderIn(lang, {
     if (L === "E" || L === "A") return acc === -1 ? L + "s" : L + "ses";
     return L + "es".repeat(-acc);
   }
-  const base = lang === "fr" ? FR_SYL[letter] : EN_LETTERS[letter];
+  const base = lang === "fr" ? FR_SYL[letter] : lang === "ro" ? RO_SYL[letter] : EN_LETTERS[letter];
   return base + (acc > 0 ? "♯".repeat(acc) : "♭".repeat(-acc));
 }
 const ACC = {
@@ -219,7 +369,7 @@ function parseIn(lang, raw) {
       oct: m[3]
     };
   }
-  if (lang === "fr") {
+  if (lang === "fr" || lang === "ro") {
     m = s.match(/^(do|ut|ré|re|mi|fa|sol|la|si)(##|#|bb|b)?(-?\d)?$/);
     if (!m) return null;
     const syl = {
@@ -304,6 +454,7 @@ try {
 
 // ─── Metronom mit vier synthetisierten Klängen ───
 // Genaues Timing über Vorausplanung im Audio-Takt (nicht über setInterval allein).
+// Zählstimme (eins, zwei, …) in der gewählten Sprache, Taktwechsel wie „5/8 3/4“.
 
 const METRO_SOUNDS = ["Mechanisch", "Hoch", "Dirigentenstock", "Klatschen"];
 const SUBDIVISIONS = [{
@@ -438,6 +589,102 @@ function playClick(ctx, out, t, sound, level) {
     default:
   }
 }
+
+// ─── Zählstimme: kurze Aufnahmen 1–12 und „und“ pro Sprache (Ordner voice/) ───
+const voiceCache = {};
+function loadVoice(ctx) {
+  const key = LANG;
+  if (!voiceCache[key]) {
+    const names = [...Array.from({
+      length: 12
+    }, (_, i) => String(i + 1)), "and"];
+    voiceCache[key] = Promise.all(names.map(n => fetch(`voice/${key}/${n}.wav`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => new Promise((res, rej) => ctx.decodeAudioData(b, res, rej))).then(buf => [n, buf]).catch(() => [n, null]))).then(list => Object.fromEntries(list));
+  }
+  return voiceCache[key];
+}
+
+// ─── Taktwechsel ───
+// „5/8 3/4“, „4/4 + 6/8“, Gruppen in Klammern: „7/8(2+2+3)“. Tempo gilt für die Viertel.
+const DEFAULT_GROUPS = {
+  5: [3, 2],
+  6: [3, 3],
+  7: [2, 2, 3],
+  8: [3, 3, 2],
+  9: [3, 3, 3],
+  10: [3, 3, 2, 2],
+  11: [3, 3, 3, 2],
+  12: [3, 3, 3, 3]
+};
+const METER_PRESETS = ["5/8 3/4", "4/4 6/8", "3/4 2/4", "7/8(2+2+3)", "5/8(2+3) 6/8"];
+function parseMeters(text) {
+  const bars = [];
+  const bad = [];
+  text.split(/[\s,;|]+|\+(?=\d+\/)/).filter(x => x && x !== "+").forEach(tok => {
+    const m = tok.match(/^(\d{1,2})\/(2|4|8|16)(?:\((\d+(?:\+\d+)*)\))?$/);
+    if (!m || Number(m[1]) < 1) return bad.push(tok);
+    const num = Number(m[1]);
+    const den = Number(m[2]);
+    let groups = m[3] ? m[3].split("+").map(Number) : null;
+    if (groups && groups.reduce((a, b) => a + b, 0) !== num) groups = null;
+    if (!groups && den >= 8) groups = DEFAULT_GROUPS[num] || [num];
+    bars.push({
+      num,
+      den,
+      groups,
+      label: tok
+    });
+  });
+  return {
+    bars,
+    bad
+  };
+}
+
+// Schläge eines Takts: Dauer, Betonung (2 Eins, 1 Zählzeit/Gruppe, 0 leise), gesprochenes Wort, Punkt
+function barPlan(bar, s) {
+  const q = 60 / s.bpm;
+  const out = [];
+  const many = s.meters.length > 1;
+  if (bar.den <= 4) {
+    const beatDur = q * (4 / bar.den);
+    for (let b = 0; b < bar.num; b++) {
+      for (let k = 0; k < s.sub; k++) {
+        const level = k ? 0 : b === 0 && s.accent && (bar.num > 1 || many) ? 2 : 1;
+        const word = k === 0 ? String(b + 1) : s.sub === 2 ? "and" : null;
+        out.push({
+          dur: beatDur / s.sub,
+          level,
+          word,
+          dot: k === 0 ? b : null
+        });
+      }
+    }
+  } else {
+    const starts = new Set();
+    bar.groups.reduce((acc, g) => (starts.add(acc), acc + g), 0);
+    const d = q * (4 / bar.den);
+    for (let k = 0; k < bar.num; k++) {
+      const level = k === 0 ? s.accent ? 2 : 1 : starts.has(k) ? 1 : 0;
+      out.push({
+        dur: d,
+        level,
+        word: String(k + 1),
+        dot: k
+      });
+    }
+  }
+  return out;
+}
+function dotsFor(bar, accent, many) {
+  if (bar.den <= 4) return Array.from({
+    length: bar.num
+  }, (_, i) => i === 0 && accent && (bar.num > 1 || many) ? "one" : "");
+  const starts = new Set();
+  bar.groups.reduce((acc, g) => (starts.add(acc), acc + g), 0);
+  return Array.from({
+    length: bar.num
+  }, (_, i) => i === 0 && accent ? "one" : starts.has(i) ? "grp" : "small");
+}
 function Metronom() {
   const [bpm, setBpm] = useState(80);
   const [beats, setBeats] = useState(4);
@@ -445,19 +692,30 @@ function Metronom() {
   const [sound, setSound] = useState("Mechanisch");
   const [accent, setAccent] = useState(true);
   const [volume, setVolume] = useState(0.8);
+  const [voice, setVoice] = useState("off");
+  const [meterText, setMeterText] = useState("");
   const [running, setRunning] = useState(false);
   const [beat, setBeat] = useState(-1);
+  const [barNo, setBarNo] = useState(0);
   const tapsRef = useRef([]);
   const stateRef = useRef({});
+  const engineRef = useRef(null);
+  const parsed = parseMeters(meterText);
+  const meters = meterText.trim() && parsed.bars.length ? parsed.bars : [{
+    num: beats,
+    den: 4,
+    groups: null,
+    label: `${beats}/4`
+  }];
   stateRef.current = {
     bpm,
-    beats,
     sub,
     sound,
     accent,
-    volume
+    volume,
+    voice,
+    meters
   };
-  const engineRef = useRef(null);
   const stop = () => {
     const e = engineRef.current;
     if (e) {
@@ -469,6 +727,23 @@ function Metronom() {
     engineRef.current = null;
     setRunning(false);
     setBeat(-1);
+    setBarNo(0);
+  };
+  const playWord = (e, word, time, level) => {
+    const buf = e.voice && e.voice[word];
+    if (!buf) return;
+    if (e.lastVoice) {
+      try {
+        e.lastVoice.stop(time);
+      } catch {/* schon beendet */}
+    }
+    const src = e.ctx.createBufferSource();
+    src.buffer = buf;
+    const g = e.ctx.createGain();
+    g.gain.value = level === 2 ? 1.1 : level === 1 ? 0.9 : 0.7;
+    src.connect(g).connect(e.out);
+    src.start(time);
+    e.lastVoice = src;
   };
   const start = async () => {
     await Tone.start();
@@ -479,27 +754,39 @@ function Metronom() {
     const e = {
       ctx,
       out,
-      next: ctx.currentTime + 0.08,
+      next: 0,
+      bar: 0,
       tick: 0,
-      timeouts: []
+      plan: null,
+      timeouts: [],
+      voice: null
     };
+    e.voice = await loadVoice(ctx);
+    e.next = ctx.currentTime + 0.1;
     e.timer = setInterval(() => {
       const s = stateRef.current;
       out.gain.setTargetAtTime(s.volume, ctx.currentTime, 0.02);
       while (e.next < ctx.currentTime + 0.12) {
-        const perBeat = s.sub;
-        const tickInBar = e.tick % (s.beats * perBeat);
-        const onBeat = tickInBar % perBeat === 0;
-        const beatNo = Math.floor(tickInBar / perBeat);
-        const level = onBeat ? beatNo === 0 && s.accent && s.beats > 1 ? 2 : 1 : 0;
-        playClick(ctx, out, e.next, s.sound, level);
-        if (onBeat) {
+        if (!e.plan || e.tick >= e.plan.length) {
+          if (e.plan) e.bar = (e.bar + 1) % s.meters.length;
+          if (e.bar >= s.meters.length) e.bar = 0;
+          e.plan = barPlan(s.meters[e.bar], s);
+          e.tick = 0;
+        }
+        const tk = e.plan[e.tick];
+        if (s.voice !== "only") playClick(ctx, out, e.next, s.sound, tk.level);
+        if (s.voice !== "off" && tk.word) playWord(e, tk.word, e.next, tk.level);
+        if (tk.dot != null) {
           const delay = Math.max(0, (e.next - ctx.currentTime) * 1000);
-          const id = setTimeout(() => setBeat(beatNo), delay);
+          const b = e.bar;
+          const id = setTimeout(() => {
+            setBeat(tk.dot);
+            setBarNo(b);
+          }, delay);
           e.timeouts.push(id);
           if (e.timeouts.length > 32) e.timeouts.shift();
         }
-        e.next += 60 / s.bpm / perBeat;
+        e.next += tk.dur;
         e.tick++;
       }
     }, 25);
@@ -509,17 +796,22 @@ function Metronom() {
   };
   useEffect(() => () => engineRef.current && stop(), []);
 
-  // Takt- oder Unterteilungswechsel: am Taktanfang neu einsetzen
+  // Takt-, Unterteilungs- oder Taktwechsel-Änderung: am Anfang neu einsetzen
+  const meterKey = meters.map(m => m.label).join(" ");
   useEffect(() => {
-    if (engineRef.current) engineRef.current.tick = 0;
-  }, [beats, sub]);
+    const e = engineRef.current;
+    if (e) {
+      e.bar = 0;
+      e.plan = null;
+    }
+  }, [beats, sub, meterKey]);
   const tap = () => {
     const now = performance.now();
-    const taps = tapsRef.current.filter(t => now - t < 2500);
+    const taps = tapsRef.current.filter(x => now - x < 2500);
     taps.push(now);
     tapsRef.current = taps;
     if (taps.length >= 2) {
-      const gaps = taps.slice(1).map((t, i) => t - taps[i]);
+      const gaps = taps.slice(1).map((x, i) => x - taps[i]);
       const avg = gaps.reduce((a, b) => a + b, 0) / gaps.length;
       setBpm(Math.max(30, Math.min(240, Math.round(60000 / avg))));
     }
@@ -536,6 +828,8 @@ function Metronom() {
     playClick(ctx, out, ctx.currentTime + 0.42, name, 1);
     setTimeout(() => out.disconnect(), 1500);
   };
+  const curBar = meters[Math.min(barNo, meters.length - 1)];
+  const dots = dotsFor(curBar, accent, meters.length > 1);
   return /*#__PURE__*/React.createElement("div", {
     className: "mt"
   }, /*#__PURE__*/React.createElement("h3", {
@@ -570,14 +864,18 @@ function Metronom() {
     value: bpm,
     onChange: e => setBpm(Number(e.target.value)),
     "aria-label": t("Tempo")
-  }), /*#__PURE__*/React.createElement("div", {
+  }), meters.length > 1 && /*#__PURE__*/React.createElement("div", {
+    className: "mt-bars",
+    "aria-hidden": "true"
+  }, meters.map((m, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: `mt-bar ${running && i === barNo ? "on" : ""}`
+  }, m.label))), /*#__PURE__*/React.createElement("div", {
     className: "mt-dots",
     "aria-hidden": "true"
-  }, Array.from({
-    length: beats
-  }, (_, i) => /*#__PURE__*/React.createElement("span", {
+  }, dots.map((cls, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
-    className: `mt-dot ${i === beat ? "on" : ""} ${i === 0 && accent && beats > 1 ? "one" : ""}`
+    className: `mt-dot ${cls} ${running && i === beat ? "on" : ""}`
   }))), /*#__PURE__*/React.createElement("div", {
     className: "ds-row"
   }, /*#__PURE__*/React.createElement("button", {
@@ -588,9 +886,19 @@ function Metronom() {
     onClick: tap
   }, "Tap")), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
-  }, /*#__PURE__*/React.createElement("label", null, t("Takt"), " ", /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("label", null, t("Zählstimme"), " ", /*#__PURE__*/React.createElement("select", {
+    value: voice,
+    onChange: e => setVoice(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "off"
+  }, t("aus")), /*#__PURE__*/React.createElement("option", {
+    value: "click"
+  }, t("Stimme + Klang")), /*#__PURE__*/React.createElement("option", {
+    value: "only"
+  }, t("nur Stimme")))), /*#__PURE__*/React.createElement("label", null, t("Takt"), " ", /*#__PURE__*/React.createElement("select", {
     value: beats,
-    onChange: e => setBeats(Number(e.target.value))
+    onChange: e => setBeats(Number(e.target.value)),
+    disabled: !!meterText.trim() && parsed.bars.length > 0
   }, [1, 2, 3, 4, 5, 6, 7, 8, 9, 12].map(b => /*#__PURE__*/React.createElement("option", {
     key: b,
     value: b
@@ -613,7 +921,31 @@ function Metronom() {
     step: 0.05,
     value: volume,
     onChange: e => setVolume(Number(e.target.value))
-  }))));
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-meter"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "ds-field"
+  }, /*#__PURE__*/React.createElement("span", null, t("Taktwechsel (z. B. „5/8 3/4“ oder „7/8(2+2+3)“), leer = normaler Takt")), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: meterText,
+    onChange: e => setMeterText(e.target.value),
+    placeholder: "5/8 3/4"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, METER_PRESETS.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p,
+    className: `ds-chip ${meterText.trim() === p ? "active" : ""}`,
+    onClick: () => setMeterText(p)
+  }, p.replace(" ", " + "))), meterText && /*#__PURE__*/React.createElement("button", {
+    className: "ds-chip",
+    onClick: () => setMeterText("")
+  }, t("aus"))), parsed.bad.length > 0 && /*#__PURE__*/React.createElement("p", {
+    className: "ds-error"
+  }, t("Nicht erkannt: {e}", {
+    e: parsed.bad.join(", ")
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "ds-hint"
+  }, t("Das Tempo gilt für die Viertelnote. In Achteltakten zählt jede Achtel, der Anfang jeder Gruppe ist betont (5/8 = 3+2)."))));
 }
 
 // ─── Stimmgerät mit Intonations-Aufnahme ───
@@ -751,40 +1083,58 @@ function summarize(events, tol) {
 function Gauge({
   cents,
   active,
-  tol
+  tol,
+  v
 }) {
-  // Halbkreis von −50 bis +50 Cent, grüne Zone = Toleranz
+  // Halbkreis von −50 bis +50 Cent mit Strichskala. Der Zeiger ist immer da (in Ruhe auf 0);
+  // der Bereich, in dem er steht, leuchtet: grün = sauber, blau = zu tief, rot = zu hoch.
   const R = 120;
   const cx = 150;
-  const cy = 140;
-  const ang = c => Math.max(-50, Math.min(50, c)) / 50 * (Math.PI / 2.2);
+  const cy = 145;
+  const MAX = Math.PI / 2.2;
+  const ang = c => Math.max(-50, Math.min(50, c)) / 50 * MAX;
   const pt = (c, r = R) => [cx + r * Math.sin(ang(c)), cy - r * Math.cos(ang(c))];
   const arc = (c1, c2, r = R) => {
     const [x1, y1] = pt(c1, r);
     const [x2, y2] = pt(c2, r);
     return `M${x1},${y1} A${r},${r} 0 0 1 ${x2},${y2}`;
   };
-  const [nx, ny] = pt(cents, R - 8);
+  const zone = (name, c1, c2, color) => {
+    const lit = active && v === name;
+    return /*#__PURE__*/React.createElement("path", {
+      d: arc(c1, c2),
+      stroke: color,
+      strokeWidth: lit ? 16 : 12,
+      fill: "none",
+      opacity: lit ? 1 : 0.32,
+      style: lit ? {
+        filter: `drop-shadow(0 0 6px ${color})`
+      } : undefined
+    });
+  };
+  const ticks = [];
+  for (let c = -50; c <= 50; c += 5) {
+    const big = c % 25 === 0;
+    const mid = c % 10 === 0;
+    const [x1, y1] = pt(c, R - 12);
+    const [x2, y2] = pt(c, R - (big ? 30 : mid ? 24 : 19));
+    ticks.push( /*#__PURE__*/React.createElement("line", {
+      key: c,
+      x1: x1,
+      y1: y1,
+      x2: x2,
+      y2: y2,
+      stroke: "var(--muted)",
+      strokeWidth: big ? 2 : 1
+    }));
+  }
+  const color = !active ? "var(--muted)" : v === "ok" ? "var(--ok)" : v === "tief" ? "var(--tu-low)" : "var(--tu-high)";
+  const deg = active ? ang(cents) * 180 / Math.PI : 0;
   return /*#__PURE__*/React.createElement("svg", {
     className: "tu-gauge",
     viewBox: "0 0 300 160",
     "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: arc(-50, -tol),
-    stroke: "var(--tu-low)",
-    strokeWidth: "14",
-    fill: "none"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: arc(-tol, tol),
-    stroke: "var(--ok)",
-    strokeWidth: "14",
-    fill: "none"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: arc(tol, 50),
-    stroke: "var(--tu-high)",
-    strokeWidth: "14",
-    fill: "none"
-  }), [-50, -25, 0, 25, 50].map(c => {
+  }, zone("tief", -50, -tol, "var(--tu-low)"), zone("ok", -tol, tol, "var(--ok)"), zone("hoch", tol, 50, "var(--tu-high)"), ticks, [-50, -25, 0, 25, 50].map(c => {
     const [x, y] = pt(c, R + 16);
     return /*#__PURE__*/React.createElement("text", {
       key: c,
@@ -794,20 +1144,29 @@ function Gauge({
       fontSize: "11",
       fill: "var(--muted)"
     }, c > 0 ? `+${c}` : c);
-  }), active && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+  }), /*#__PURE__*/React.createElement("g", {
+    style: {
+      transform: `rotate(${deg}deg)`,
+      transformOrigin: `${cx}px ${cy}px`,
+      transition: "transform .12s ease-out"
+    }
+  }, /*#__PURE__*/React.createElement("line", {
     x1: cx,
     y1: cy,
-    x2: nx,
-    y2: ny,
-    stroke: "var(--text)",
+    x2: cx,
+    y2: cy - R + 6,
+    stroke: color,
     strokeWidth: "3.5",
-    strokeLinecap: "round"
-  }), /*#__PURE__*/React.createElement("circle", {
+    strokeLinecap: "round",
+    style: active ? {
+      filter: `drop-shadow(0 0 4px ${color})`
+    } : undefined
+  })), /*#__PURE__*/React.createElement("circle", {
     cx: cx,
     cy: cy,
     r: "7",
-    fill: "var(--text)"
-  })));
+    fill: color
+  }));
 }
 function Trace({
   trace,
@@ -1030,7 +1389,8 @@ function Stimmgeraet({
   }, /*#__PURE__*/React.createElement(Gauge, {
     cents: cents,
     active: !!reading,
-    tol: tol
+    tol: tol,
+    v: v
   }), /*#__PURE__*/React.createElement("div", {
     className: "tu-big"
   }, /*#__PURE__*/React.createElement("span", {

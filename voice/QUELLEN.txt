@@ -1,0 +1,5 @@
+Zählstimmen, erzeugt mit Piper TTS (https://github.com/rhasspy/piper):
+de: Thorsten (CC0)
+en: Southern English Female, OpenSLR 83 (CC BY-SA 4.0)
+fr: SIWIS (CC BY 4.0)
+ro: Riccardo Fasol, M-AILABS (italienische Stimme, rumänische Zahlen in italienischer Lautschrift)
