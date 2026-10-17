@@ -2281,7 +2281,7 @@ const GROUP_SPLITS = {
   6: ["auto", "3+3", "2+4", "4+2", "2+2+2"]
 };
 
-// Untere Lagen: Ganzton 1-4, Halbton 1-2 (in 4er-Gruppen 2-4); drei Töne 1-2-4.
+// Untere Lagen: Ganzton 1-4, Halbton 1-2 (in 4er-Gruppen 2-4); drei Töne 1-2-4, Ganzton-Ganzton 1-1-4 (F1 G1 A4).
 // Daumenlagen: jede Teilgruppe beginnt mit dem Daumen (C+ D1 E3 | F+ G1 A3): + 1 2 3; drei Töne + 1 2 oder + 1 3; zwei Töne + 1.
 function subgroupFingers(midis, thumb, groupSize) {
   const span = midis[midis.length - 1] - midis[0];
@@ -2293,7 +2293,7 @@ function subgroupFingers(midis, thumb, groupSize) {
     return ["+", 1, 2, 3, 3, 3].slice(0, k);
   }
   if (k === 2) return span <= 1 ? groupSize === 4 ? [2, 4] : [1, 2] : [1, 4];
-  if (k === 3) return [1, 2, 4];
+  if (k === 3) return midis[1] - midis[0] >= 2 && midis[2] - midis[1] >= 2 ? [1, 1, 4] : [1, 2, 4];
   return [1, 2, 3, 4, 4, 4].slice(0, k);
 }
 
