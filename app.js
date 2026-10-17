@@ -120,6 +120,7 @@ const TR = {
   "Eine Saite · 3 Finger": ["One string · 3 fingers", "Une corde · 3 doigts"],
   "{n}er Gruppe": ["group of {n}", "groupe de {n}"],
   "Fingersatz": ["Fingering", "Doigté"],
+  "Automatisch": ["Automatic", "Automatique"],
   "kleine Zahl = Finger, 0 = leere Saite": ["small number = finger, 0 = open string", "petit chiffre = doigt, 0 = corde à vide"],
   "{up} Töne aufwärts, {down} abwärts": ["{up} notes up, {down} down", "{up} notes en montant, {down} en descendant"],
   "Alle Lagen nacheinander": ["All positions in a row", "Toutes les positions à la suite"],
@@ -303,6 +304,7 @@ const RO = {
   "Eine Saite · 3 Finger": "O coardă · 3 degete",
   "{n}er Gruppe": "grup de {n}",
   "Fingersatz": "Digitație",
+  "Automatisch": "Automat",
   "kleine Zahl = Finger, 0 = leere Saite": "cifra mică = deget, 0 = coardă liberă",
   "{up} Töne aufwärts, {down} abwärts": "{up} note în sus, {down} în jos",
   "Alle Lagen nacheinander": "Toate pozițiile la rând",
@@ -2274,7 +2276,7 @@ function buildRun({
 // Fingersatz je Saite in Teilgruppen (z. B. 4er = 2+2, 1+3, 3+1); jede Teilgruppe ist eine Handstellung.
 const GROUP_SPLITS = {
   3: ["3", "1+2", "2+1"],
-  4: ["2+2", "1+3", "3+1", "4"],
+  4: ["auto", "2+2", "1+3", "3+1", "4"],
   5: ["2+3", "1+4", "3+2", "4+1"],
   6: ["3+3", "2+4", "4+2", "2+2+2"]
 };
@@ -2293,6 +2295,14 @@ function subgroupFingers(midis, thumb, groupSize) {
   if (k === 2) return span <= 1 ? groupSize === 4 ? [2, 4] : [1, 2] : [1, 4];
   if (k === 3) return [1, 2, 4];
   return [1, 2, 3, 4, 4, 4].slice(0, k);
+}
+
+// 4er-Gruppe automatisch (nach Petru): ab Bund 8 mit Quarte als Umfang + 1 2 3 (C+ D1 E2 F3),
+// sonst zwei Paare: Ganzton 1-4, ab Bund 10 1-3; Halbton 2-4, ab Bund 7 1-2 (H1 C2 D1 E3 | F1 G4 A1 H3).
+function autoFour(g) {
+  if (g[0].fret >= 8 && g[3].midi - g[0].midi <= 5) return ["+", 1, 2, 3];
+  const pair = (a, b) => b.midi - a.midi <= 1 ? a.fret >= 7 ? [1, 2] : [2, 4] : a.fret >= 10 ? [1, 3] : [1, 4];
+  return [...pair(g[0], g[1]), ...pair(g[2], g[3])];
 }
 function buildGroup({
   rootIndex,
@@ -2327,10 +2337,12 @@ function buildGroup({
   };
   // ab D auf der E-Saite (Lage 6) mit Daumen
   const thumb = upSeq[0].fret >= THUMB_FROM_FRET;
-  // ohne eigene Wahl: in Daumenlagen die 4er-Gruppe als eine Handstellung (+ 1 2 3), jede Saite beginnt mit dem Daumen
-  const used = split && GROUP_SPLITS[size].includes(split) ? split : thumb && size === 4 ? "4" : GROUP_SPLITS[size][0];
-  const parts = used.split("+").map(Number);
-  for (let st = 0; st < 4; st++) {
+  const used = split && GROUP_SPLITS[size].includes(split) ? split : GROUP_SPLITS[size][0];
+  const parts = used === "auto" ? [] : used.split("+").map(Number);
+  if (used === "auto") for (let st = 0; st < 4; st++) {
+    const g = upSeq.slice(st * 4, st * 4 + 4);
+    autoFour(g).forEach((f, j) => g[j].finger = f);
+  } else for (let st = 0; st < 4; st++) {
     let i = st * size;
     parts.forEach(p => {
       const sub = upSeq.slice(i, i + p);
@@ -3195,7 +3207,7 @@ function GriffbrettTonleiter({
       ...x,
       [groupSize]: sp
     }))
-  }, sp)))), mode !== "lage" && /*#__PURE__*/React.createElement("div", {
+  }, sp === "auto" ? t("Automatisch") : sp)))), mode !== "lage" && /*#__PURE__*/React.createElement("div", {
     className: "gt-lagen"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
