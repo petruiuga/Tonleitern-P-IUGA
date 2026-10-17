@@ -2279,18 +2279,18 @@ const GROUP_SPLITS = {
   6: ["3+3", "2+4", "4+2", "2+2+2"]
 };
 
-// Untere Lagen: Ganzton 1-4, Halbton 1-2; drei Töne 1-2-4.
+// Untere Lagen: Ganzton 1-4, Halbton 1-2 (in 4er-Gruppen 2-4); drei Töne 1-2-4.
 // Daumenlagen: + 1 2 3; drei Töne kleine Terz + 1 2, große Terz + 1 3; zwei Töne Halbton 1-2, Ganzton 1-3.
-function subgroupFingers(midis, thumb) {
+function subgroupFingers(midis, thumb, groupSize) {
   const span = midis[midis.length - 1] - midis[0];
   const k = midis.length;
   if (k === 1) return [1];
   if (thumb) {
     if (k === 2) return span <= 1 ? [1, 2] : [1, 3];
-    if (k === 3) return ["+", 1, span <= 3 ? 2 : 3];
+    if (k === 3) return ["+", 1, midis[2] - midis[1] >= 2 ? 3 : 2];
     return ["+", 1, 2, 3, 3, 3].slice(0, k);
   }
-  if (k === 2) return span <= 1 ? [1, 2] : [1, 4];
+  if (k === 2) return span <= 1 ? groupSize === 4 ? [2, 4] : [1, 2] : [1, 4];
   if (k === 3) return [1, 2, 4];
   return [1, 2, 3, 4, 4, 4].slice(0, k);
 }
@@ -2334,7 +2334,7 @@ function buildGroup({
     let i = st * size;
     parts.forEach(p => {
       const sub = upSeq.slice(i, i + p);
-      subgroupFingers(sub.map(x => x.midi), thumb).forEach((f, j) => sub[j].finger = f);
+      subgroupFingers(sub.map(x => x.midi), thumb, size).forEach((f, j) => sub[j].finger = f);
       i += p;
     });
   }
@@ -2488,8 +2488,7 @@ function buildThreeFinger({
   }
   for (let i = 0; i < size; i += 3) {
     const tri = upSeq.slice(i, i + 3);
-    const span = tri[tri.length - 1].midi - tri[0].midi;
-    ["+", 1, span <= 3 ? 2 : 3].forEach((f, j) => tri[j] && (tri[j].finger = f));
+    ["+", 1, tri.length > 2 && tri[2].midi - tri[1].midi >= 2 ? 3 : 2].forEach((f, j) => tri[j] && (tri[j].finger = f));
   }
   const fingerAt = {};
   upSeq.forEach(x => fingerAt[x.midi] = x.finger);
