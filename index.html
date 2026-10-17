@@ -163,6 +163,12 @@ input[type=range]{vertical-align:middle;max-width:140px}
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  // Neue Version geladen: sofort anzeigen, solange noch nichts angetippt wurde
+  let touched = false;
+  window.addEventListener("pointerdown", () => (touched = true), { once: true });
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!touched && navigator.serviceWorker.controller) location.reload();
+  });
 }
 </script>
 </body>
