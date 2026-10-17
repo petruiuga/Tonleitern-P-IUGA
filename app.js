@@ -199,6 +199,7 @@ const TR = {
   "Folge speichern": ["Save sequence", "Enregistrer la suite"],
   "Name für diese Folge:": ["Name for this sequence:", "Nom de cette suite :"],
   "Klang": ["Sound", "Son"],
+  "Grünes Licht": ["Green light", "Lumière verte"],
   "Quinte (bei Einzeltönen)": ["Fifth (single notes)", "Quinte (notes seules)"],
   "Oktave dazu": ["Add octave", "Ajouter l’octave"],
   "Endlos": ["Loop", "En boucle"],
@@ -380,6 +381,7 @@ const RO = {
   "Folge speichern": "Salvează succesiunea",
   "Name für diese Folge:": "Numele acestei succesiuni:",
   "Klang": "Sunet",
+  "Grünes Licht": "Lumină verde",
   "Quinte (bei Einzeltönen)": "Cvintă (la note simple)",
   "Oktave dazu": "Adaugă octava",
   "Endlos": "În buclă",
@@ -975,6 +977,12 @@ function Metronom() {
   const [running, setRunning] = useState(false);
   const [beat, setBeat] = useState(-1);
   const [barNo, setBarNo] = useState(0);
+  const [light, setLight] = useState(true);
+  const [soundOn, setSoundOn] = useState(true);
+  const [flash, setFlash] = useState({
+    n: 0,
+    one: false
+  });
   const tapsRef = useRef([]);
   const stateRef = useRef({});
   const engineRef = useRef(null);
@@ -992,7 +1000,8 @@ function Metronom() {
     accent,
     volume,
     voice,
-    meters
+    meters,
+    soundOn
   };
   const ownRef = useRef(ownVoice);
   ownRef.current = ownVoice;
@@ -1031,7 +1040,7 @@ function Metronom() {
     await Tone.start();
     const ctx = Tone.getContext().rawContext;
     const out = ctx.createGain();
-    out.gain.value = stateRef.current.volume;
+    out.gain.value = stateRef.current.soundOn ? stateRef.current.volume : 0;
     out.connect(ctx.destination);
     const e = {
       ctx,
@@ -1047,7 +1056,8 @@ function Metronom() {
     e.next = ctx.currentTime + 0.1;
     e.timer = setInterval(() => {
       const s = stateRef.current;
-      out.gain.setTargetAtTime(s.volume, ctx.currentTime, 0.02);
+      // Klang aus: nur das Licht blinkt
+      out.gain.setTargetAtTime(s.soundOn ? s.volume : 0, ctx.currentTime, 0.02);
       while (e.next < ctx.currentTime + 0.12) {
         if (!e.plan || e.tick >= e.plan.length) {
           if (e.plan) e.bar = (e.bar + 1) % s.meters.length;
@@ -1061,9 +1071,14 @@ function Metronom() {
         if (tk.dot != null) {
           const delay = Math.max(0, (e.next - ctx.currentTime) * 1000);
           const b = e.bar;
+          const one = tk.level === 2;
           const id = setTimeout(() => {
             setBeat(tk.dot);
             setBarNo(b);
+            setFlash(f => ({
+              n: f.n + 1,
+              one
+            }));
           }, delay);
           e.timeouts.push(id);
           if (e.timeouts.length > 32) e.timeouts.shift();
@@ -1158,7 +1173,13 @@ function Metronom() {
   }, meters.map((m, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
     className: `mt-bar ${running && i === barNo ? "on" : ""}`
-  }, m.label))), /*#__PURE__*/React.createElement("div", {
+  }, m.label))), light && /*#__PURE__*/React.createElement("div", {
+    className: "mt-light-wrap",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    key: flash.n,
+    className: `mt-light ${running && flash.n ? "go" : ""} ${flash.one ? "one" : ""}`
+  })), /*#__PURE__*/React.createElement("div", {
     className: "mt-dots",
     "aria-hidden": "true"
   }, dots.map((cls, i) => /*#__PURE__*/React.createElement("span", {
@@ -1173,6 +1194,16 @@ function Metronom() {
     className: "ds-btn",
     onClick: tap
   }, "Tap")), /*#__PURE__*/React.createElement("div", {
+    className: "ds-row ds-wrap"
+  }, /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: light,
+    onChange: e => setLight(e.target.checked)
+  }), " ", t("Grünes Licht")), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: soundOn,
+    onChange: e => setSoundOn(e.target.checked)
+  }), " ", t("Klang"))), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("label", null, t("Zählstimme"), " ", /*#__PURE__*/React.createElement("select", {
     value: voice,

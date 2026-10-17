@@ -70,6 +70,12 @@ textarea{width:100%;font:inherit;font-size:1.05rem;padding:10px;border-radius:10
 .mt-dot.one{border-color:var(--brass);border-width:2px}
 .mt-dot.on{background:var(--wood)}
 .mt-dot.one.on{background:var(--brass)}
+.mt-light-wrap{display:flex;justify-content:center;margin:10px 0 6px}
+.mt-light{width:84px;height:84px;border-radius:50%;background:color-mix(in srgb,var(--ok) 12%,transparent);border:2px solid color-mix(in srgb,var(--ok) 45%,transparent)}
+.mt-light.go{animation:mtflash .22s ease-out}
+.mt-light.go.one{animation:mtflash1 .3s ease-out}
+@keyframes mtflash{0%{background:color-mix(in srgb,var(--ok) 80%,transparent);box-shadow:0 0 28px var(--ok)}100%{background:color-mix(in srgb,var(--ok) 12%,transparent);box-shadow:none}}
+@keyframes mtflash1{0%{background:var(--ok);box-shadow:0 0 48px var(--ok);transform:scale(1.08)}100%{background:color-mix(in srgb,var(--ok) 12%,transparent);box-shadow:none;transform:none}}
 .ds-nav{position:sticky;top:0;z-index:5;display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;margin:-4px 0 12px;background:var(--bg)}
 .ds-nav a{font-size:.9rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);text-decoration:none}
 section{scroll-margin-top:56px}
