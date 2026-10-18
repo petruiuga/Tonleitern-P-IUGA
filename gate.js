@@ -51,7 +51,7 @@
       g = document.createElement("div");
       g.id = "gate";
       g.innerHTML =
-        '<form><h1>Tonleitern &amp; Drone</h1><label for="gate-pw"></label>' +
+        '<form><h1><small>Petru IUGA</small>TuneMetroScales</h1><label for="gate-pw"></label>' +
         '<input id="gate-pw" type="password" autocomplete="current-password">' +
         '<button type="submit"></button><p class="gate-err"></p></form>';
       document.body.appendChild(g);
