@@ -199,6 +199,13 @@ const TR = {
   "Folge speichern": ["Save sequence", "Enregistrer la suite"],
   "Name für diese Folge:": ["Name for this sequence:", "Nom de cette suite :"],
   "Klang": ["Sound", "Son"],
+  "🎥 Kamera an": ["🎥 Camera on", "🎥 Caméra"],
+  "Kamera aus": ["Camera off", "Caméra éteinte"],
+  "Kamera wechseln": ["Switch camera", "Changer de caméra"],
+  "Video ansehen": ["Watch video", "Voir la vidéo"],
+  "Video speichern": ["Save video", "Enregistrer la vidéo"],
+  "Kamera nicht verfügbar. Bitte den Zugriff auf die Kamera erlauben.": ["Camera not available. Please allow camera access.", "Caméra indisponible. Veuillez autoriser l’accès à la caméra."],
+  "Fingerschnipsen": ["Finger snap", "Claquement de doigts"],
   "Grünes Licht": ["Green light", "Lumière verte"],
   "Quinte (bei Einzeltönen)": ["Fifth (single notes)", "Quinte (notes seules)"],
   "Oktave dazu": ["Add octave", "Ajouter l’octave"],
@@ -381,6 +388,13 @@ const RO = {
   "Folge speichern": "Salvează succesiunea",
   "Name für diese Folge:": "Numele acestei succesiuni:",
   "Klang": "Sunet",
+  "🎥 Kamera an": "🎥 Pornește camera",
+  "Kamera aus": "Oprește camera",
+  "Kamera wechseln": "Schimbă camera",
+  "Video ansehen": "Vezi video",
+  "Video speichern": "Salvează video",
+  "Kamera nicht verfügbar. Bitte den Zugriff auf die Kamera erlauben.": "Camera nu este disponibilă. Permite accesul la cameră.",
+  "Fingerschnipsen": "Pocnit din degete",
   "Grünes Licht": "Lumină verde",
   "Quinte (bei Einzeltönen)": "Cvintă (la note simple)",
   "Oktave dazu": "Adaugă octava",
@@ -558,7 +572,7 @@ function unlockIOSAudio() {
 // Genaues Timing über Vorausplanung im Audio-Takt (nicht über setInterval allein).
 // Zählstimme (eins, zwei, …) in der gewählten Sprache, Taktwechsel wie „5/8 3/4“.
 
-const METRO_SOUNDS = ["Mechanisch", "Hoch", "Dirigentenstock", "Klatschen"];
+const METRO_SOUNDS = ["Mechanisch", "Hoch", "Dirigentenstock", "Klatschen", "Fingerschnipsen"];
 const SUBDIVISIONS = [{
   label: "♩",
   n: 1
@@ -688,6 +702,27 @@ function playClick(ctx, out, t, sound, level) {
         decay: 0.09
       });
       break;
+    case "Fingerschnipsen":
+      // lautes, scharfes Schnipsen: harter Knack, heller Rauschstoß, kurzer Hautton
+      noiseHit(ctx, out, t, {
+        freq: 3000,
+        q: 0.8,
+        peak: 2.6 * v,
+        decay: 0.008,
+        type: "highpass"
+      });
+      noiseHit(ctx, out, t + 0.002, {
+        freq: 2300,
+        q: 2.2,
+        peak: 2.4 * v,
+        decay: 0.045
+      });
+      tone(ctx, out, t, {
+        freq: 1450,
+        peak: 0.7 * v,
+        decay: 0.02
+      });
+      break;
     default:
   }
 }
@@ -754,12 +789,17 @@ function loadVoice(ctx, own) {
   const key = LANG + (own ? ":own" : "");
   if (!voiceCache[key]) {
     voiceCache[key] = (async () => {
-      const std = Object.fromEntries(await Promise.all(VOICE_WORDS.map(n => fetch(`voice/${LANG}/${n}.wav`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => decode(ctx, b)).then(buf => [n, buf]).catch(() => [n, null]))));
+      const get = path => fetch(path).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => decode(ctx, b)).catch(() => null);
+      // je Wort ruhig gesprochen und schnell gesprochen (für hohe Tempi)
+      const std = Object.fromEntries(await Promise.all(VOICE_WORDS.map(async n => [n, await get(`voice/${LANG}/${n}.wav`)])));
+      const fast = Object.fromEntries(await Promise.all(VOICE_WORDS.map(async n => [n, await get(`voice/${LANG}/fast/${n}.wav`)])));
+      std.fast = fast;
       if (!own) return std;
       const blobs = await ownGetAll();
       await Promise.all(Object.entries(blobs).map(async ([w, blob]) => {
         try {
           std[w] = trimBuffer(ctx, await decode(ctx, await blob.arrayBuffer()));
+          delete std.fast[w];
         } catch {/* Aufnahme unlesbar: Standardstimme */}
       }));
       return std;
@@ -965,7 +1005,7 @@ function dotsFor(bar, accent, many) {
   }, (_, i) => i === 0 && accent ? "one" : starts.has(i) ? "grp" : "small");
 }
 function Metronom() {
-  const [bpm, setBpm] = useState(80);
+  const [bpm, setBpm] = useState(60);
   const [beats, setBeats] = useState(4);
   const [sub, setSub] = useState(1);
   const [sound, setSound] = useState("Mechanisch");
@@ -1018,9 +1058,16 @@ function Metronom() {
     setBeat(-1);
     setBarNo(0);
   };
-  const playWord = (e, word, time, level) => {
-    const buf = e.voice && e.voice[word];
-    if (!buf) return;
+
+  // Wort passend zum Tempo: ruhig gesprochen, wenn Zeit ist, sonst die schnelle Fassung,
+  // notfalls etwas schneller abgespielt, damit es vor dem nächsten Wort fertig ist
+  const playWord = (e, word, time, level, avail) => {
+    const slow = e.voice && e.voice[word];
+    if (!slow) return;
+    const room = avail * 0.85;
+    const quick = e.voice.fast?.[word];
+    const buf = slow.duration <= room || !quick ? slow : quick;
+    const rate = Math.min(1.35, Math.max(1, buf.duration / room));
     if (e.lastVoice) {
       try {
         e.lastVoice.stop(time);
@@ -1028,6 +1075,7 @@ function Metronom() {
     }
     const src = e.ctx.createBufferSource();
     src.buffer = buf;
+    src.playbackRate.value = rate;
     const g = e.ctx.createGain();
     g.gain.value = level === 2 ? 1.1 : level === 1 ? 0.9 : 0.7;
     src.connect(g).connect(e.out);
@@ -1067,7 +1115,12 @@ function Metronom() {
         }
         const tk = e.plan[e.tick];
         if (s.voice !== "only") playClick(ctx, out, e.next, s.sound, tk.level);
-        if (s.voice !== "off" && tk.word) playWord(e, tk.word, e.next, tk.level);
+        if (s.voice !== "off" && tk.word) {
+          // Zeit bis zum nächsten gesprochenen Wort
+          let avail = tk.dur;
+          for (let j = e.tick + 1; j < e.plan.length && !e.plan[j].word; j++) avail += e.plan[j].dur;
+          playWord(e, tk.word, e.next, tk.level, avail);
+        }
         if (tk.dot != null) {
           const delay = Math.max(0, (e.next - ctx.currentTime) * 1000);
           const b = e.bar;
@@ -1372,6 +1425,11 @@ function detectPitch(input, srIn, minRms = 0.006) {
 
 // Läuft die Seite eingebettet (z. B. als Vorschau in claude.ai), darf sie das Mikrofon oft
 // gar nicht benutzen, auch wenn der Browser es erlaubt hat.
+const MIC = {
+  echoCancellation: false,
+  noiseSuppression: false,
+  autoGainControl: false
+};
 function inFrame() {
   try {
     return window.self !== window.top;
@@ -1470,9 +1528,9 @@ function Gauge({
       stroke: color,
       strokeWidth: lit ? 16 : 12,
       fill: "none",
-      opacity: lit ? 1 : 0.32,
+      opacity: lit ? 1 : 0.6,
       style: lit ? {
-        filter: `drop-shadow(0 0 6px ${color})`
+        filter: `drop-shadow(0 0 10px ${color})`
       } : undefined
     });
   };
@@ -1488,11 +1546,12 @@ function Gauge({
       y1: y1,
       x2: x2,
       y2: y2,
-      stroke: "var(--muted)",
-      strokeWidth: big ? 2 : 1
+      stroke: "var(--text)",
+      strokeOpacity: big ? 0.9 : 0.6,
+      strokeWidth: big ? 2.2 : 1.3
     }));
   }
-  const color = !active ? "var(--muted)" : v === "ok" ? "var(--ok)" : v === "tief" ? "var(--tu-low)" : "var(--tu-high)";
+  const color = !active ? "var(--text)" : v === "ok" ? "var(--ok)" : v === "tief" ? "var(--tu-low)" : "var(--tu-high)";
   const deg = active ? ang(cents) * 180 / Math.PI : 0;
   return /*#__PURE__*/React.createElement("svg", {
     className: "tu-gauge",
@@ -1505,8 +1564,9 @@ function Gauge({
       x: x,
       y: y + 4,
       textAnchor: "middle",
-      fontSize: "11",
-      fill: "var(--muted)"
+      fontSize: "12",
+      fontWeight: "600",
+      fill: "var(--text)"
     }, c > 0 ? `+${c}` : c);
   }), /*#__PURE__*/React.createElement("g", {
     style: {
@@ -1520,10 +1580,10 @@ function Gauge({
     x2: cx,
     y2: cy - R + 6,
     stroke: color,
-    strokeWidth: "3.5",
+    strokeWidth: "4.5",
     strokeLinecap: "round",
     style: active ? {
-      filter: `drop-shadow(0 0 4px ${color})`
+      filter: `drop-shadow(0 0 7px ${color})`
     } : undefined
   })), /*#__PURE__*/React.createElement("circle", {
     cx: cx,
@@ -1585,6 +1645,13 @@ function Stimmgeraet({
   const [events, setEvents] = useState([]);
   const [result, setResult] = useState(null);
   const [audioUrl, setAudioUrl] = useState("");
+  // Video: Kamerabild mit den gespielten Tönen (blau zu tief, grün sauber, rot zu hoch) einblenden und aufnehmen
+  const [camera, setCamera] = useState(false);
+  const [facing, setFacing] = useState("user");
+  const [videoUrl, setVideoUrl] = useState("");
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const overlayRef = useRef({});
   const ref = useRef(null);
   const a4Ref = useRef(a4);
   a4Ref.current = a4;
@@ -1613,7 +1680,7 @@ function Stimmgeraet({
     const r = ref.current;
     if (r) {
       clearInterval(r.timer);
-      r.stream.getTracks().forEach(t => t.stop());
+      r.stream.getTracks().forEach(tr => tr.stop());
       r.ctx.close();
     }
     ref.current = null;
@@ -1621,15 +1688,11 @@ function Stimmgeraet({
     setReading(null);
     setTrace([]);
   };
-  const startMic = async () => {
+  const startMic = async withStream => {
     setError("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        }
+      const stream = withStream instanceof MediaStream ? withStream : await navigator.mediaDevices.getUserMedia({
+        audio: MIC
       });
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       await ctx.resume();
@@ -1724,13 +1787,21 @@ function Stimmgeraet({
     setResult(null);
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl("");
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    setVideoUrl("");
     try {
-      const mr = new MediaRecorder(stream);
+      // mit Kamera: das Bild samt eingeblendeten Tönen aufnehmen, dazu der Ton vom Mikrofon
+      const cam = camera && canvasRef.current?.captureStream;
+      const recStream = cam ? new MediaStream([...canvasRef.current.captureStream(30).getVideoTracks(), ...stream.getAudioTracks()]) : stream;
+      const mr = new MediaRecorder(recStream);
       const chunks = [];
       mr.ondataavailable = e => e.data.size && chunks.push(e.data);
-      mr.onstop = () => setAudioUrl(URL.createObjectURL(new Blob(chunks, {
-        type: mr.mimeType || "audio/webm"
-      })));
+      mr.onstop = () => {
+        const url = URL.createObjectURL(new Blob(chunks, {
+          type: mr.mimeType || (cam ? "video/webm" : "audio/webm")
+        }));
+        cam ? setVideoUrl(url) : setAudioUrl(url);
+      };
       mr.start();
       recRef.current.mr = mr;
     } catch {
@@ -1751,10 +1822,120 @@ function Stimmgeraet({
   useEffect(() => () => {
     if (ref.current) stopMic();
   }, []);
+  const startCamera = async (face = facing) => {
+    if (ref.current) stopMic();
+    setError("");
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: MIC,
+        video: {
+          facingMode: face,
+          width: {
+            ideal: 1280
+          },
+          height: {
+            ideal: 720
+          }
+        }
+      });
+    } catch (e) {
+      setError(e?.name === "NotAllowedError" || e?.name === "NotFoundError" ? t("Kamera nicht verfügbar. Bitte den Zugriff auf die Kamera erlauben.") : micErrorText(e));
+      return;
+    }
+    if (await startMic(stream)) setCamera(true);
+  };
+  const stopCamera = () => {
+    if (recording) stopRecording();
+    stopMic();
+    setCamera(false);
+  };
+  const switchCamera = () => {
+    const face = facing === "user" ? "environment" : "user";
+    setFacing(face);
+    startCamera(face);
+  };
+
+  // Kamerabild + Töne laufend auf die Leinwand zeichnen (das wird auch aufgenommen)
+  useEffect(() => {
+    if (!camera) return undefined;
+    const v = videoRef.current;
+    v.srcObject = ref.current?.stream || null;
+    v.play().catch(() => {});
+    const css = getComputedStyle(document.documentElement);
+    const col = {
+      ok: css.getPropertyValue("--ok").trim(),
+      tief: css.getPropertyValue("--tu-low").trim(),
+      hoch: css.getPropertyValue("--tu-high").trim()
+    };
+    let raf;
+    const draw = () => {
+      const c = canvasRef.current;
+      if (c && v.videoWidth) {
+        if (c.width !== v.videoWidth) {
+          c.width = v.videoWidth;
+          c.height = v.videoHeight;
+        }
+        const g = c.getContext("2d");
+        const W = c.width;
+        const H = c.height;
+        const u = Math.min(W, H) / 100;
+        g.drawImage(v, 0, 0, W, H);
+        const o = overlayRef.current;
+        const grad = g.createLinearGradient(0, H * 0.62, 0, H);
+        grad.addColorStop(0, "rgba(0,0,0,0)");
+        grad.addColorStop(1, "rgba(0,0,0,.7)");
+        g.fillStyle = grad;
+        g.fillRect(0, H * 0.62, W, H * 0.38);
+        g.textBaseline = "alphabetic";
+        if (o.reading) {
+          const c1 = col[o.v];
+          g.font = `700 ${22 * u}px system-ui, sans-serif`;
+          g.fillStyle = c1;
+          g.shadowColor = c1;
+          g.shadowBlur = 4 * u;
+          g.textAlign = "left";
+          g.fillText(o.reading.name + o.reading.octave, 4 * u, H - 6 * u);
+          g.shadowBlur = 0;
+          g.font = `600 ${7 * u}px system-ui, sans-serif`;
+          g.fillText(`${o.reading.cents > 0 ? "+" : ""}${o.reading.cents} ${t("Cent")} · ${o.text}`, 4 * u, H - 30 * u);
+        }
+        // zuletzt gespielte Töne rechts unten
+        const ev = (o.events || []).slice(-6);
+        g.font = `700 ${7 * u}px system-ui, sans-serif`;
+        g.textAlign = "right";
+        let x = W - 4 * u;
+        for (let i = ev.length - 1; i >= 0; i--) {
+          const e = ev[i];
+          g.fillStyle = col[verdict(e.cents, o.tol)];
+          const label = e.name;
+          g.fillText(label, x, H - 6 * u);
+          x -= g.measureText(label).width + 4 * u;
+        }
+        if (o.rec) {
+          g.fillStyle = col.hoch;
+          g.beginPath();
+          g.arc(W - 6 * u, 6 * u, 2.4 * u, 0, Math.PI * 2);
+          g.fill();
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [camera]);
   const cents = reading?.cents ?? 0;
   const v = reading ? verdict(cents, tol) : null;
   const sum = result ? summarize(result, tol) : null;
   const liveSum = recording ? summarize(events, tol) : null;
+  overlayRef.current = {
+    reading,
+    v,
+    tol,
+    events,
+    rec: recording,
+    text: reading ? VERDICT_TEXT[v] : ""
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "tu"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1793,13 +1974,29 @@ function Stimmgeraet({
   }, reading ? `${cents > 0 ? "+" : ""}${cents} ${t("Cent")} · ${reading.freq.toFixed(1)} Hz` : " "))), /*#__PURE__*/React.createElement(Trace, {
     trace: trace,
     tol: tol
+  })), camera && /*#__PURE__*/React.createElement("div", {
+    className: "tu-cam"
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: videoRef,
+    muted: true,
+    playsInline: true,
+    autoPlay: true
+  }), /*#__PURE__*/React.createElement("canvas", {
+    ref: canvasRef
   })), /*#__PURE__*/React.createElement("div", {
     className: "ds-row ds-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ds-btn-sm",
-    onClick: on ? stopMic : startMic,
+    onClick: on ? camera ? stopCamera : stopMic : startMic,
     disabled: recording
   }, on ? t("Stimmgerät aus") : t("🎤 Stimmgerät an")), /*#__PURE__*/React.createElement("button", {
+    className: "ds-btn-sm",
+    onClick: camera ? stopCamera : () => startCamera(),
+    disabled: recording
+  }, camera ? t("Kamera aus") : t("🎥 Kamera an")), camera && !recording && /*#__PURE__*/React.createElement("button", {
+    className: "ds-btn-sm",
+    onClick: switchCamera
+  }, t("Kamera wechseln")), /*#__PURE__*/React.createElement("button", {
     className: `ds-btn-sm ${recording ? "rec" : ""}`,
     onClick: recording ? stopRecording : startRecording
   }, recording ? t("■ Aufnahme beenden ({n} Töne)", {
@@ -1848,7 +2045,20 @@ function Stimmgeraet({
     key: r.name + r.octave
   }, /*#__PURE__*/React.createElement("td", null, r.name, /*#__PURE__*/React.createElement("sub", null, r.octave)), /*#__PURE__*/React.createElement("td", null, r.n), /*#__PURE__*/React.createElement("td", {
     className: verdict(r.avg, tol)
-  }, r.avg > 0 ? "+" : "", r.avg), /*#__PURE__*/React.createElement("td", null, r.tief || ""), /*#__PURE__*/React.createElement("td", null, r.ok || ""), /*#__PURE__*/React.createElement("td", null, r.hoch || "")))))), audioUrl && /*#__PURE__*/React.createElement("div", {
+  }, r.avg > 0 ? "+" : "", r.avg), /*#__PURE__*/React.createElement("td", null, r.tief || ""), /*#__PURE__*/React.createElement("td", null, r.ok || ""), /*#__PURE__*/React.createElement("td", null, r.hoch || "")))))), videoUrl && /*#__PURE__*/React.createElement("div", {
+    className: "tu-audio"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ds-label"
+  }, t("Video ansehen")), /*#__PURE__*/React.createElement("video", {
+    className: "tu-video",
+    controls: true,
+    playsInline: true,
+    src: videoUrl
+  }), /*#__PURE__*/React.createElement("a", {
+    className: "ds-btn-sm",
+    href: videoUrl,
+    download: `stimmgeraet-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}.${videoUrl && /mp4/.test(recRef.current.mr?.mimeType || "") ? "mp4" : "webm"}`
+  }, t("Video speichern"))), audioUrl && /*#__PURE__*/React.createElement("div", {
     className: "tu-audio"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ds-label"
