@@ -103,7 +103,11 @@ section{scroll-margin-top:56px}
 .dy-seg{text-align:center;font:italic 700 .85rem Georgia,serif;padding:6px 0;border-radius:6px;color:var(--text);background:color-mix(in srgb,var(--c) 22%,transparent);opacity:.75}
 .dy-seg.on{background:var(--c);color:#111;opacity:1;box-shadow:0 0 12px var(--c)}
 .dy-needle{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--text);transition:left .08s}
-.dy-trace{display:block;width:100%;height:80px;border-radius:8px;background:var(--bg);margin:4px 0 6px}
+.dy-chart{display:flex;gap:6px;margin:6px 0 8px}
+.dy-labels{display:flex;flex-direction:column-reverse;justify-content:space-around;font:italic 700 .8rem Georgia,serif;min-width:2.4em;text-align:right}
+.dy-trace{display:block;flex:1;width:100%;height:min(46vh,260px);border-radius:8px;background:var(--bg)}
+.dy-shift{margin:2px 0 4px}
+.dy .dy-shift input{display:block;width:100%;max-width:none;margin:0}.dy-ends{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
 .dy-result{margin:10px 0}
 .tu-cam{position:relative;margin:10px 0;border-radius:12px;overflow:hidden;background:#000}
 .tu-cam video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
