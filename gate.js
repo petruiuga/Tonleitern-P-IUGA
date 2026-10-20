@@ -7,7 +7,8 @@
     de: ["Passwort", "Öffnen", "Falsches Passwort", "Bitte einmal mit Internet öffnen."],
     en: ["Password", "Open", "Wrong password", "Please open once with internet."],
     fr: ["Mot de passe", "Ouvrir", "Mot de passe incorrect", "Ouvrez une fois avec internet."],
-    ro: ["Parolă", "Deschide", "Parolă greșită", "Deschide o dată cu internet."],
+    ro: ["Parolă", "Deschideți", "Parolă greșită", "Deschideți o dată cu internet."],
+    it: ["Password", "Apra", "Password errata", "Apra una volta con internet."],
   }[lang] || ["Passwort", "Öffnen", "Falsches Passwort", "Bitte einmal mit Internet öffnen."];
   var enc = null;
   var subtle = crypto.subtle;

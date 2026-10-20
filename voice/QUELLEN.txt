@@ -3,3 +3,4 @@ de: Kerstin (CC0)
 en: Southern English Female, OpenSLR 83 (CC BY-SA 4.0)
 fr: SIWIS (CC BY 4.0)
 ro: Irina, RHVoice (GPLv2) – russische Stimme, rumänische Zahlen in kyrillischer Schreibweise
+it: Riccardo Fasol, M-AILABS Speech Dataset (BSD-Lizenz)
