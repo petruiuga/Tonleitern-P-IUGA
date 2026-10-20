@@ -137,6 +137,14 @@ section{scroll-margin-top:56px}
 .mt-bar.on{background:var(--brass-soft);border-color:var(--brass);color:var(--text)}
 .mt-dot.small{width:12px;height:12px;margin:3px 0}
 .mt-dot.grp{border-color:var(--wood);border-width:2px}
+.mt-dots{gap:2px}
+.mt-dot-btn{background:none;border:0;padding:6px;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:34px;min-height:34px;-webkit-tap-highlight-color:transparent}
+.mt-dot-btn .mt-dot{width:22px;height:22px}
+.mt-dot-btn .mt-dot.small{width:15px;height:15px;margin:0}
+.mt-dot.off{background:transparent;border:1.5px dashed var(--muted);opacity:.75;position:relative}
+.mt-dot.off::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--line);transform:rotate(45deg);background:var(--muted)}
+.mt-dot.off.on{background:transparent;opacity:.8}
+.mt-dots-hint{text-align:center;font-size:12px;color:var(--muted, #9a8f80);margin:0 0 8px}
 .mt-meter{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
 .mt-blocks{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
 .mt-blocks .ds-chip{min-width:0;padding:4px 8px;font-size:.85rem}
