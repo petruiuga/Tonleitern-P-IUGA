@@ -205,7 +205,13 @@ input[type=range]{vertical-align:middle;max-width:140px}
 .gt-n{cursor:pointer}
 .gt-n.held{outline:2px solid #6fb7ff;outline-offset:1px}
 .gt-held{margin:6px 0 0;padding:6px 10px;border-radius:8px;background:rgba(111,183,255,.15);color:#cfe6ff;font-size:.9rem}
-.dy-time{display:flex;justify-content:space-between;margin:-4px 0 8px calc(2.4em + 6px);font-size:.75rem;color:var(--muted)}
+.dy-time{position:relative;height:1.2em;margin:-4px 0 10px calc(2.4em + 6px);font-size:.75rem;color:var(--muted)}
+.dy-time span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.dy-time span:first-child{transform:none}
+.dy-time span:last-child{transform:translateX(-100%)}
+.dy-labels.into{font:600 .7rem system-ui,sans-serif;justify-content:space-between;color:var(--muted)}
+.dy-into-bars{height:120px}
+.dy-into{color:var(--ok)}
 .dy-cal{margin:14px 0}
 .dy-cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0}
 .dy-cal-head b{text-transform:capitalize}
