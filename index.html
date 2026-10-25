@@ -226,6 +226,17 @@ input[type=range]{vertical-align:middle;max-width:140px}
 .dy-cal-row{display:flex;flex-wrap:wrap;gap:12px;width:100%;padding:8px 10px;margin:4px 0;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;text-align:left;cursor:pointer}
 .dy-cal-row b{font-family:Georgia,serif;font-style:italic}
 .dy-dev{height:160px}
+.tu-piano{position:relative;height:150px;margin:8px 0 6px;max-width:460px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.pk-w{position:absolute;top:0;bottom:0;width:calc(100% / 7);padding:0;border:1px solid #3a3a3a;border-radius:0 0 7px 7px;background:linear-gradient(#fdfbf6,#e9e4d8);cursor:pointer;display:flex;align-items:flex-end;justify-content:center}
+.pk-w span{font:600 .8rem system-ui,sans-serif;color:#555;margin-bottom:8px}
+.pk-b{position:absolute;top:0;height:60%;width:calc(100% / 7 * .6);transform:translateX(-50%);padding:0;border:1px solid #000;border-radius:0 0 5px 5px;background:linear-gradient(#333,#111);cursor:pointer;z-index:2}
+.pk-w.on{background:linear-gradient(#d8ecff,#9fcbff)}
+.pk-w.on span{color:#123}
+.pk-b.on{background:linear-gradient(#3d7fc4,#1d4f86)}
+.mt-own{width:100%;margin:6px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.mt-own-name{min-width:0;flex:1;max-width:220px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+.ds-chip.own{font-style:italic}
+.gt-pedal{display:block;margin:2px 0 8px}
 </style>
 </head>
 <body>
