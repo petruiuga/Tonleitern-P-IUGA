@@ -1,13 +1,13 @@
 // Offline-Speicher: beim ersten Öffnen (mit Internet) werden alle App-Dateien abgelegt.
 // Danach startet die App immer aus dem Speicher – auch ohne Internet – und holt
 // im Hintergrund neue Versionen. Bei Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = "tonleitern-v78";
+const CACHE = "tonleitern-v79";
 const FILES = [
   "./",
   "index.html",
   "app.enc",
   "gate.js",
-                                                                                                                                                                                            "manifest.webmanifest",
+                                                                                                                                                                                              "manifest.webmanifest",
   "vendor/react.production.min.js",
   "vendor/react-dom.production.min.js",
   "vendor/Tone.js",
@@ -371,6 +371,22 @@ const FILES = [
   "voice-notes/ro/His-1.mp3",
   "voice-notes/ro/His-2.mp3",
   "voice-notes/ro/His-3.mp3",
+  "voice-petru-notes/de/A.mp3",
+  "voice-petru-notes/de/C.mp3",
+  "voice-petru-notes/de/Ces.mp3",
+  "voice-petru-notes/de/Cis.mp3",
+  "voice-petru-notes/de/D.mp3",
+  "voice-petru-notes/de/Des.mp3",
+  "voice-petru-notes/de/Dis.mp3",
+  "voice-petru-notes/de/E.mp3",
+  "voice-petru-notes/de/Eis.mp3",
+  "voice-petru-notes/de/Es.mp3",
+  "voice-petru-notes/de/F.mp3",
+  "voice-petru-notes/de/Fes.mp3",
+  "voice-petru-notes/de/Fis.mp3",
+  "voice-petru-notes/de/G.mp3",
+  "voice-petru-notes/de/Ges.mp3",
+  "voice-petru-notes/de/Gis.mp3",
   "bass/28.mp3",
   "bass/30.mp3",
   "bass/31.mp3",
