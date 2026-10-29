@@ -278,7 +278,16 @@ if ("serviceWorker" in navigator) {
   let touched = false;
   window.addEventListener("pointerdown", () => (touched = true), { once: true });
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!touched && navigator.serviceWorker.controller) location.reload();
+    if (!navigator.serviceWorker.controller) return;
+    if (!touched) return location.reload();
+    // App wird schon benutzt: Hinweis zum Neuladen statt mitten im Üben neu zu starten
+    if (document.getElementById("tl-update")) return;
+    const b = document.createElement("button");
+    b.id = "tl-update";
+    b.textContent = "Neue Version – hier tippen zum Laden";
+    b.style.cssText = "position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;padding:12px 18px;border-radius:999px;border:0;background:#b8892c;color:#1c1712;font:600 15px system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.5)";
+    b.onclick = () => location.reload();
+    document.body.appendChild(b);
   });
 }
 </script>
