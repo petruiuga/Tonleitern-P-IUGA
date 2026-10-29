@@ -1,13 +1,19 @@
 // Offline-Speicher: beim ersten Öffnen (mit Internet) werden alle App-Dateien abgelegt.
 // Danach startet die App immer aus dem Speicher – auch ohne Internet – und holt
 // im Hintergrund neue Versionen. Bei Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = "tonleitern-v122";
+const CACHE = "tonleitern-v123";
 const FILES = [
   "./",
   "index.html",
   "app.enc",
   "gate.js",
-                                                                                                                                                                                                                                                                                                                                                                          "manifest.webmanifest",
+  "manifest.webmanifest",
+  "fonts/cormorant-garamond-latin-ext-wght-italic.woff2",
+  "fonts/cormorant-garamond-latin-ext-wght-normal.woff2",
+  "fonts/cormorant-garamond-latin-wght-italic.woff2",
+  "fonts/cormorant-garamond-latin-wght-normal.woff2",
+  "fonts/jost-latin-ext-wght-normal.woff2",
+  "fonts/jost-latin-wght-normal.woff2",
   "vendor/react.production.min.js",
   "vendor/react-dom.production.min.js",
   "vendor/Tone.js",
