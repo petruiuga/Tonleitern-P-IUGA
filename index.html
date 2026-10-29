@@ -295,6 +295,22 @@ body{font-family:var(--font-text);letter-spacing:.01em}
 .dy-now{font-size:2.5rem}.dy-seg{font-size:1rem}.dy-labels{font-size:.95rem}
 .tu-labels,.dy-labels.into,.pk-w span{font-family:var(--font-text)}
 @media (max-width:420px){.ds-app{font-size:1.65rem}.home-name{font-size:1.25rem}}
+/* Doppelgriff */
+.tu-mode{flex-basis:100%}
+.tu-duo{min-width:200px}
+.tu-duo-notes{display:flex;gap:18px;align-items:flex-end;justify-content:center}
+.tu-duo-note{display:flex;flex-direction:column;align-items:center}
+.tu-duo-note .tu-verdict{font-size:.95rem;font-variant-numeric:tabular-nums}
+.tu-live .tu-duo .tu-note{font-size:3rem}
+.tu-live .tu-duo-note.ok .tu-note{color:var(--ok);text-shadow:0 0 14px color-mix(in srgb,var(--ok) 55%,transparent)}
+.tu-live .tu-duo-note.tief .tu-note{color:var(--tu-low);text-shadow:0 0 14px color-mix(in srgb,var(--tu-low) 55%,transparent)}
+.tu-live .tu-duo-note.hoch .tu-note{color:var(--tu-high);text-shadow:0 0 14px color-mix(in srgb,var(--tu-high) 55%,transparent)}
+.tu-duo-note.hi .tu-note{text-decoration:underline 3px #ffc845;text-underline-offset:6px}
+.tu-duo .tu-info{text-align:center;margin-top:4px}
+.tu-duo-legend{margin:2px 0 0;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.tu-duo-legend i{display:inline-block;width:18px;height:3px;border-radius:2px;background:#fff}
+.tu-duo-legend i.hi{background:#ffc845;margin-left:8px}
+.tu-plus{align-self:center;color:var(--muted);font-weight:700;margin:0 -2px}
 </style>
 </head>
 <body>
