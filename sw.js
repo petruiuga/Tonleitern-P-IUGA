@@ -1,7 +1,7 @@
 // Offline-Speicher: beim ersten Öffnen (mit Internet) werden alle App-Dateien abgelegt.
 // Danach startet die App immer aus dem Speicher – auch ohne Internet – und holt
 // im Hintergrund neue Versionen. Bei Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = "tonleitern-v125";
+const CACHE = "tonleitern-v126";
 const FILES = [
   "./",
   "index.html",
@@ -496,6 +496,34 @@ const FILES = [
   "bass/52.mp3",
   "bass/56.mp3",
   "bass/59.mp3",
+  "bass-spic/28a.mp3",
+  "bass-spic/28b.mp3",
+  "bass-spic/30a.mp3",
+  "bass-spic/30b.mp3",
+  "bass-spic/31a.mp3",
+  "bass-spic/31b.mp3",
+  "bass-spic/34a.mp3",
+  "bass-spic/34b.mp3",
+  "bass-spic/36a.mp3",
+  "bass-spic/36b.mp3",
+  "bass-spic/38a.mp3",
+  "bass-spic/38b.mp3",
+  "bass-spic/40a.mp3",
+  "bass-spic/40b.mp3",
+  "bass-spic/42a.mp3",
+  "bass-spic/42b.mp3",
+  "bass-spic/44a.mp3",
+  "bass-spic/44b.mp3",
+  "bass-spic/45a.mp3",
+  "bass-spic/45b.mp3",
+  "bass-spic/49a.mp3",
+  "bass-spic/49b.mp3",
+  "bass-spic/52a.mp3",
+  "bass-spic/52b.mp3",
+  "bass-spic/56a.mp3",
+  "bass-spic/56b.mp3",
+  "bass-spic/59a.mp3",
+  "bass-spic/59b.mp3",
   "voice-petru/de/1.wav",
   "voice-petru/de/10.wav",
   "voice-petru/de/11.wav",
